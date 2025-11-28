@@ -450,7 +450,7 @@ const rawVocab = [
   ["🍿", "Пуканки", "Снак"],
   ["🍫", "Шоколад", "Десерт"],
   ["🍬", "Бонбон", "Десерт"],
-  ["🍭", "Ллизалка", "Десерт"],
+  ["🍭", "Близалка", "Десерт"],
   ["🥛", "Прясно мляко", "Напитки"],
   ["☕", "Кафе", "Напитки"],
   ["🍵", "Чай", "Напитки"],
@@ -491,8 +491,6 @@ const rawVocab = [
   ["🥣", "Купа", "Кухня"],
   ["🥛", "Чаша", "Кухня"],
   ["🧂", "Пипер", "Подправки"],
-  ["🍶", "Оцет", "Подправки"],
-  ["🫒", "Зехтин", "Подправки"],
   ["🥫", "Консерва", "Храна"],
   ["🥧", "Пай", "Десерт"],
   ["🍮", "Крем карамел", "Десерт"],
@@ -535,16 +533,12 @@ const rawVocab = [
   ["🤟", "Обичам", "Действие"],
   ["🤲", "Моля се", "Действие"],
   ["🤙", "Обаждам се", "Действие"],
-  ["🦵", "Ритам", "Действие"],
   ["🤜", "Удрям", "Действие"],
   ["🛑", "Спирам", "Действие"],
   ["🏁", "Започвам", "Действие"],
-  ["🚪", "Отварям", "Действие"],
-  ["🚪", "Затварям", "Действие"],
   ["⬆️", "Вдигам", "Действие"],
   ["⬇️", "Спускам", "Действие"],
   ["🔍", "Търся", "Действие"],
-  ["🔎", "Намирам", "Действие"],
   ["🤔", "Мисля", "Действие"],
   ["🧠", "Помня", "Действие"],
   ["❓", "Питам", "Действие"],
@@ -552,7 +546,6 @@ const rawVocab = [
   ["🤣", "Смея се", "Действие"],
   ["😭", "Плача", "Действие"],
   ["😡", "Карам се", "Действие"],
-  ["🩹", "Лекувам", "Действие"],
   ["🚿", "Мия", "Действие"],
   ["✂️", "Режа", "Действие"],
   ["🥛", "Пия", "Действие"],
@@ -586,7 +579,7 @@ const rawVocab = [
   ["🔧", "Инструмент", "Дом"],
   ["🧻", "Тоалетна хартия", "Баня"],
   ["🪥", "Четка за зъби", "Баня"],
-  ["🪒", "Бръснач", "Баня"],
+  ["🪒", "Самобръсначка", "Баня"],
   ["🧺", "Кош", "Баня"],
   ["🧶", "Прежда", "Хоби"],
   ["🛗", "Асансьор", "Сграда"],
@@ -602,7 +595,6 @@ const rawVocab = [
   ["🧴", "Крем", "Баня"],
   ["💅", "Лак", "Козметика"],
   ["💄", "Червило", "Козметика"],
-  ["👃", "Парфюм", "Козметика"],
   ["💍", "Бижута", "Аксесоари"],
   ["🕶️", "Слънчеви очила", "Аксесоари"],
   ["👛", "Портмоне", "Аксесоари"],
@@ -612,7 +604,6 @@ const rawVocab = [
 
   // --- ТЯЛО И ЗДРАВЕ (Body & Health) ---
   ["👂", "Ухо", "Тяло"],
-  ["👃", "Нос", "Тяло"],
   ["👄", "Уста", "Тяло"],
   ["👀", "Око", "Тяло"],
   ["🤚", "Ръка", "Тяло"],
@@ -628,11 +619,9 @@ const rawVocab = [
   ["👅", "Език", "Тяло"],
   ["🦵", "Коляно", "Тяло"],
   ["🦶", "Пета", "Тяло"],
-  ["👃", "Ноздра", "Тяло"],
+  ["👃", "Нос", "Тяло"],
   ["👁️", "Вежда", "Тяло"],
   ["💋", "Устни", "Тяло"],
-  ["👂", "Ляво ухо", "Тяло"],
-  ["👂", "Дясно ухо", "Тяло"],
   ["🤏", "Палец", "Тяло"],
   ["✊", "Юмрук", "Тяло"],
   ["🩸", "Кръв", "Тяло"],
@@ -707,13 +696,6 @@ const rawVocab = [
   ["👰", "Бука", "Семейство"],
   ["🤵", "Младоженец", "Семейство"],
   ["🤰", "Бременна", "Семейство"],
-  ["👦", "Внук", "Семейство"],
-  ["👧", "Внучка", "Семейство"],
-  ["🧑", "Братовчед", "Семейство"],
-  ["🧑", "Приятел", "Връзки"],
-  ["🧑", "Съсед", "Връзки"],
-  ["🧑", "Колега", "Връзки"],
-  ["🧑", "Гост", "Връзки"],
 
   // --- ПЛОДОВЕ И ЗЕЛЕНЧУЦИ (Fruits & Veggies) ---
   ["🍎", "Ябълка", "Плодове"],
@@ -805,7 +787,6 @@ const rawVocab = [
   ["🎶", "Мелодия", "Музика"],
   ["👨‍🎤", "Певец", "Музика"],
   ["👩‍🎤", "Певица", "Музика"],
-  ["🎹", "Синтезатор", "Музика"],
   ["🔊", "Колона", "Музика"],
 
   // --- ТЕХНОЛОГИИ (Technology) ---
@@ -893,129 +874,94 @@ const SASHA_CELEBRATIONS = [
 ];
 
 // --- THEME CONFIGURATIONS ---
+// Beautiful gradients inspired by uiGradients.com, hypercolor.dev, and gradient.style
 const THEMES = {
   default: {
     id: 'default',
     name: 'Класика',
     emoji: '🎨',
-    description: 'Оригиналната тема',
-    colors: {
-      primary: '#A0E7E5',
-      secondary: '#6366F1',
-      accent: '#FBBF24',
-      text: '#1E293B',
-      cardBg: '#FFFFFF',
-    },
-    menuBg: 'bg-[#A0E7E5]',
-    gameBg: 'bg-[#E0F7FA]',
-    pattern: 'bg-[radial-gradient(#ffffff33_1px,transparent_1px)] bg-[size:20px_20px]',
+    colors: { primary: '#A0E7E5', secondary: '#6366F1', accent: '#FBBF24', text: '#1E293B', cardBg: '#FFFFFF' },
+    menuBg: 'bg-gradient-to-br from-teal-200 via-cyan-100 to-teal-200',
+    gameBg: 'bg-gradient-to-br from-cyan-50 via-teal-50 to-cyan-100',
+    pattern: '',
   },
-  princess: {
-    id: 'princess',
-    name: 'Принцеса',
-    emoji: '🏰',
-    description: 'Розово и лилаво царство',
-    forPlayer: 'Лю',
-    colors: {
-      primary: '#F9A8D4',
-      secondary: '#A855F7',
-      accent: '#FCD34D',
-      text: '#831843',
-      cardBg: '#FDF2F8',
-    },
-    menuBg: 'bg-gradient-to-br from-pink-300 via-purple-200 to-pink-300',
-    gameBg: 'bg-gradient-to-br from-pink-100 via-purple-50 to-pink-100',
-    pattern: 'bg-[url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M30 5 L35 20 L50 20 L38 30 L42 45 L30 35 L18 45 L22 30 L10 20 L25 20 Z\' fill=\'%23f9a8d433\'/%3E%3C/svg%3E")] bg-[size:60px_60px]',
+  candy: {
+    id: 'candy',
+    name: 'Бонбони',
+    emoji: '🍬',
+    colors: { primary: '#ff6a88', secondary: '#ff99ac', accent: '#ffd700', text: '#4a1942', cardBg: '#fff5f7' },
+    // "Candy" gradient - pink to peach
+    menuBg: 'bg-[linear-gradient(135deg,#ff9a9e_0%,#fecfef_50%,#fecfef_100%)]',
+    gameBg: 'bg-[linear-gradient(135deg,#fff5f7_0%,#ffe4ec_50%,#ffeef2_100%)]',
+    pattern: '',
   },
-  superhero: {
-    id: 'superhero',
-    name: 'Супергерой',
-    emoji: '⚡',
-    description: 'Сила и екшън!',
-    forPlayer: 'Саша',
-    colors: {
-      primary: '#3B82F6',
-      secondary: '#EF4444',
-      accent: '#FBBF24',
-      text: '#1E3A8A',
-      cardBg: '#EFF6FF',
-    },
-    menuBg: 'bg-gradient-to-br from-blue-500 via-indigo-400 to-blue-500',
-    gameBg: 'bg-gradient-to-br from-blue-100 via-indigo-50 to-blue-100',
-    pattern: 'bg-[url("data:image/svg+xml,%3Csvg width=\'40\' height=\'40\' viewBox=\'0 0 40 40\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Ccircle cx=\'20\' cy=\'20\' r=\'3\' fill=\'%233b82f633\'/%3E%3C/svg%3E")] bg-[size:40px_40px]',
+  sunset: {
+    id: 'sunset',
+    name: 'Залез',
+    emoji: '🌅',
+    colors: { primary: '#fa709a', secondary: '#fee140', accent: '#ff6b6b', text: '#5c2751', cardBg: '#fff9f0' },
+    // "Sunset" gradient - orange to pink
+    menuBg: 'bg-[linear-gradient(135deg,#fa709a_0%,#fee140_100%)]',
+    gameBg: 'bg-[linear-gradient(135deg,#fff4e6_0%,#ffe8ec_100%)]',
+    pattern: '',
   },
   ocean: {
     id: 'ocean',
     name: 'Океан',
     emoji: '🌊',
-    description: 'Подводно приключение',
-    colors: {
-      primary: '#06B6D4',
-      secondary: '#0891B2',
-      accent: '#FDE68A',
-      text: '#164E63',
-      cardBg: '#ECFEFF',
-    },
-    menuBg: 'bg-gradient-to-br from-cyan-400 via-teal-300 to-cyan-400',
-    gameBg: 'bg-gradient-to-br from-cyan-100 via-teal-50 to-cyan-100',
-    pattern: 'bg-[url("data:image/svg+xml,%3Csvg width=\'100\' height=\'20\' viewBox=\'0 0 100 20\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M0 10 Q25 0 50 10 Q75 20 100 10\' stroke=\'%2306b6d422\' fill=\'none\' stroke-width=\'2\'/%3E%3C/svg%3E")] bg-[size:100px_20px]',
+    colors: { primary: '#667eea', secondary: '#764ba2', accent: '#f093fb', text: '#1a1a4e', cardBg: '#f0f4ff' },
+    // "Ocean Blue" gradient
+    menuBg: 'bg-[linear-gradient(135deg,#667eea_0%,#764ba2_100%)]',
+    gameBg: 'bg-[linear-gradient(135deg,#e8f0ff_0%,#f3e8ff_100%)]',
+    pattern: '',
+    isDark: false,
   },
-  forest: {
-    id: 'forest',
-    name: 'Гора',
-    emoji: '🌲',
-    description: 'Вълшебната гора',
-    colors: {
-      primary: '#22C55E',
-      secondary: '#15803D',
-      accent: '#FCD34D',
-      text: '#14532D',
-      cardBg: '#F0FDF4',
-    },
-    menuBg: 'bg-gradient-to-br from-green-400 via-emerald-300 to-green-400',
-    gameBg: 'bg-gradient-to-br from-green-100 via-emerald-50 to-green-100',
-    pattern: 'bg-[url("data:image/svg+xml,%3Csvg width=\'40\' height=\'40\' viewBox=\'0 0 40 40\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M20 5 L25 15 L35 15 L27 22 L30 32 L20 26 L10 32 L13 22 L5 15 L15 15 Z\' fill=\'%2322c55e22\'/%3E%3C/svg%3E")] bg-[size:40px_40px]',
+  northern: {
+    id: 'northern',
+    name: 'Северно сияние',
+    emoji: '✨',
+    colors: { primary: '#43e97b', secondary: '#38f9d7', accent: '#ffd700', text: '#0d4035', cardBg: '#f0fff4' },
+    // "Northern Lights" gradient - green to cyan
+    menuBg: 'bg-[linear-gradient(135deg,#43e97b_0%,#38f9d7_100%)]',
+    gameBg: 'bg-[linear-gradient(135deg,#e6fff0_0%,#e0fffc_100%)]',
+    pattern: '',
+  },
+  lavender: {
+    id: 'lavender',
+    name: 'Лавандула',
+    emoji: '💜',
+    colors: { primary: '#a18cd1', secondary: '#fbc2eb', accent: '#ffd700', text: '#4a3560', cardBg: '#faf5ff' },
+    // "Lavender" gradient - purple to pink
+    menuBg: 'bg-[linear-gradient(135deg,#a18cd1_0%,#fbc2eb_100%)]',
+    gameBg: 'bg-[linear-gradient(135deg,#f5f0ff_0%,#fff0f8_100%)]',
+    pattern: '',
   },
   space: {
     id: 'space',
     name: 'Космос',
     emoji: '🚀',
-    description: 'Сред звездите',
-    forPlayer: 'Саша',
-    colors: {
-      primary: '#8B5CF6',
-      secondary: '#4F46E5',
-      accent: '#F59E0B',
-      text: '#E0E7FF',
-      cardBg: '#1E1B4B',
-    },
-    menuBg: 'bg-gradient-to-br from-violet-900 via-indigo-800 to-purple-900',
-    gameBg: 'bg-gradient-to-br from-violet-950 via-indigo-900 to-purple-950',
-    pattern: 'bg-[url("data:image/svg+xml,%3Csvg width=\'100\' height=\'100\' viewBox=\'0 0 100 100\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Ccircle cx=\'10\' cy=\'10\' r=\'1\' fill=\'white\'/%3E%3Ccircle cx=\'50\' cy=\'30\' r=\'1.5\' fill=\'white\'/%3E%3Ccircle cx=\'80\' cy=\'60\' r=\'1\' fill=\'white\'/%3E%3Ccircle cx=\'30\' cy=\'80\' r=\'2\' fill=\'white\'/%3E%3Ccircle cx=\'70\' cy=\'90\' r=\'1\' fill=\'white\'/%3E%3C/svg%3E")] bg-[size:100px_100px]',
+    colors: { primary: '#6366f1', secondary: '#a855f7', accent: '#fbbf24', text: '#e0e7ff', cardBg: '#1e1b4b' },
+    // "Deep Space" gradient - dark purple using Tailwind classes
+    menuBg: 'bg-gradient-to-br from-indigo-950 via-purple-900 to-slate-900',
+    gameBg: 'bg-gradient-to-br from-slate-900 via-indigo-950 to-purple-950',
+    pattern: 'bg-[radial-gradient(white_1px,transparent_1px)] bg-[size:50px_50px] bg-fixed',
     isDark: true,
   },
-  garden: {
-    id: 'garden',
-    name: 'Градина',
-    emoji: '🦋',
-    description: 'Цветя и пеперуди',
-    forPlayer: 'Лю',
-    colors: {
-      primary: '#EC4899',
-      secondary: '#84CC16',
-      accent: '#FBBF24',
-      text: '#166534',
-      cardBg: '#FDF4FF',
-    },
-    menuBg: 'bg-gradient-to-br from-pink-300 via-lime-200 to-pink-300',
-    gameBg: 'bg-gradient-to-br from-pink-100 via-lime-50 to-pink-100',
-    pattern: 'bg-[url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Ccircle cx=\'30\' cy=\'30\' r=\'5\' fill=\'%23ec489922\'/%3E%3Ccircle cx=\'30\' cy=\'20\' r=\'4\' fill=\'%23ec489922\'/%3E%3Ccircle cx=\'30\' cy=\'40\' r=\'4\' fill=\'%23ec489922\'/%3E%3Ccircle cx=\'20\' cy=\'30\' r=\'4\' fill=\'%23ec489922\'/%3E%3Ccircle cx=\'40\' cy=\'30\' r=\'4\' fill=\'%23ec489922\'/%3E%3C/svg%3E")] bg-[size:60px_60px]',
+  rainbow: {
+    id: 'rainbow',
+    name: 'Дъга',
+    emoji: '🌈',
+    colors: { primary: '#f093fb', secondary: '#f5576c', accent: '#ffd700', text: '#3d1f5c', cardBg: '#fff8fc' },
+    // "Rainbow" gradient - multicolor
+    menuBg: 'bg-[linear-gradient(135deg,#f093fb_0%,#f5576c_25%,#ffd700_50%,#4facfe_75%,#43e97b_100%)]',
+    gameBg: 'bg-[linear-gradient(135deg,#fff0fc_0%,#fff5f5_25%,#fffef0_50%,#f0f8ff_75%,#f0fff4_100%)]',
+    pattern: '',
   },
 };
 
 // Helper to get theme for player
 const getPlayerTheme = (playerName) => {
-  const key = `theme_${playerName}`;
+  const key = playerName === 'Саша' ? 'theme_sasha' : 'theme_lou';
   const savedTheme = localStorage.getItem(key);
   if (savedTheme && THEMES[savedTheme]) {
     return THEMES[savedTheme];
@@ -1025,7 +971,7 @@ const getPlayerTheme = (playerName) => {
 };
 
 const setPlayerTheme = (playerName, themeId) => {
-  const key = `theme_${playerName}`;
+  const key = playerName === 'Саша' ? 'theme_sasha' : 'theme_lou';
   localStorage.setItem(key, themeId);
 };
 
@@ -1255,14 +1201,14 @@ const Mecho = ({ emotion = 'idle', showMessage = true, size = 'normal' }) => {
         }
       `}</style>
 
-      <div className="relative inline-flex flex-col items-center">
-        {/* Speech Bubble */}
+      <div className="relative inline-flex items-center">
+        {/* Speech Bubble - positioned to the right */}
         {showMessage && currentMessage && (
-          <div className={`speech-bubble absolute -top-2 left-1/2 transform -translate-x-1/2 -translate-y-full bg-white px-3 py-2 rounded-2xl shadow-lg border-2 border-amber-200 ${messageSize} text-center font-bold text-slate-700 z-10`}>
+          <div className={`speech-bubble absolute top-1/2 left-full transform -translate-y-1/2 ml-2 bg-white px-3 py-2 rounded-2xl shadow-lg border-2 border-amber-200 ${messageSize} text-center font-bold text-slate-700 z-10`}>
             {currentMessage}
-            {/* Speech bubble tail */}
-            <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-full">
-              <div className="w-0 h-0 border-l-[8px] border-r-[8px] border-t-[10px] border-l-transparent border-r-transparent border-t-white"></div>
+            {/* Speech bubble tail - points left */}
+            <div className="absolute top-1/2 left-0 transform -translate-y-1/2 -translate-x-full">
+              <div className="w-0 h-0 border-t-[8px] border-b-[8px] border-r-[10px] border-t-transparent border-b-transparent border-r-white"></div>
             </div>
           </div>
         )}
@@ -1831,7 +1777,7 @@ const MatchingGame = ({ playerName, onComplete, onExit, celebrations }) => {
             <Home size={20} className="text-slate-700" />
           </Button3D>
           <div className="text-center">
-            <div className="text-2xl font-black text-slate-800">🧠 Мемори</div>
+            <div className="text-2xl font-black text-slate-800">🧠 Запаметяване</div>
             <div className="text-sm text-slate-600">Намери двойките!</div>
           </div>
           <div className="text-center bg-purple-100 px-4 py-2 rounded-xl">
@@ -2167,25 +2113,17 @@ const SentenceBuilder = ({ playerName, onComplete, onExit, celebrations }) => {
 };
 
 // --- THEME PICKER MODAL ---
-const ThemePicker = ({ playerName, currentTheme, onSelect, onClose }) => {
+const ThemePicker = ({ currentTheme, onSelect, onClose }) => {
   const themeList = Object.values(THEMES);
-  
-  // Get suggested themes for this player
-  const getSuggested = (theme) => {
-    if (!theme.forPlayer) return false;
-    return theme.forPlayer === playerName;
-  };
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-3xl p-6 max-w-lg w-full max-h-[85vh] overflow-y-auto shadow-2xl">
+      <div className="bg-white rounded-3xl p-5 max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-black text-gray-800">
-            🎨 Тема за {playerName}
-          </h2>
+          <h2 className="text-xl font-black text-gray-800">🎨 Избери тема</h2>
           <button 
             onClick={onClose}
-            className="w-10 h-10 bg-gray-200 hover:bg-gray-300 rounded-full flex items-center justify-center text-xl transition-colors"
+            className="w-8 h-8 bg-gray-200 hover:bg-gray-300 rounded-full flex items-center justify-center text-lg transition-colors"
           >
             ✕
           </button>
@@ -2194,19 +2132,18 @@ const ThemePicker = ({ playerName, currentTheme, onSelect, onClose }) => {
         <div className="grid grid-cols-2 gap-3">
           {themeList.map((theme) => {
             const isSelected = currentTheme.id === theme.id;
-            const isSuggested = getSuggested(theme);
             
             return (
               <button
                 key={theme.id}
                 onClick={() => {
-                  setPlayerTheme(playerName, theme.id);
+                  localStorage.setItem('app_theme', theme.id);
                   onSelect(theme);
                 }}
                 className={`
-                  relative p-4 rounded-2xl border-4 transition-all duration-200
+                  relative p-4 rounded-xl border-3 transition-all duration-200
                   ${isSelected 
-                    ? 'border-yellow-400 ring-4 ring-yellow-200 scale-105' 
+                    ? 'border-yellow-400 ring-2 ring-yellow-200 scale-105' 
                     : 'border-gray-200 hover:border-gray-300 hover:scale-102'
                   }
                   ${theme.isDark ? 'text-white' : 'text-gray-800'}
@@ -2217,47 +2154,19 @@ const ThemePicker = ({ playerName, currentTheme, onSelect, onClose }) => {
                     : `linear-gradient(135deg, ${theme.colors.primary}40, ${theme.colors.secondary}30)`
                 }}
               >
-                {/* Suggested badge */}
-                {isSuggested && (
-                  <div className="absolute -top-2 -right-2 bg-yellow-400 text-yellow-900 text-xs font-bold px-2 py-1 rounded-full shadow">
-                    ЗА ТЕБ!
-                  </div>
-                )}
-                
-                {/* Selected checkmark */}
                 {isSelected && (
-                  <div className="absolute -top-2 -left-2 bg-green-500 text-white text-sm w-6 h-6 rounded-full flex items-center justify-center shadow">
+                  <div className="absolute -top-1 -left-1 bg-green-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
                     ✓
                   </div>
                 )}
-                
-                <div className="text-4xl mb-2">{theme.emoji}</div>
-                <div className="font-bold text-lg">{theme.name}</div>
-                <div className={`text-xs ${theme.isDark ? 'text-white/70' : 'text-gray-500'}`}>
-                  {theme.description}
-                </div>
-                
-                {/* Color preview */}
-                <div className="flex gap-1 mt-2 justify-center">
-                  <div 
-                    className="w-4 h-4 rounded-full border border-white/50"
-                    style={{ backgroundColor: theme.colors.primary }}
-                  />
-                  <div 
-                    className="w-4 h-4 rounded-full border border-white/50"
-                    style={{ backgroundColor: theme.colors.secondary }}
-                  />
-                  <div 
-                    className="w-4 h-4 rounded-full border border-white/50"
-                    style={{ backgroundColor: theme.colors.accent }}
-                  />
-                </div>
+                <div className="text-3xl mb-1">{theme.emoji}</div>
+                <div className="font-bold text-sm">{theme.name}</div>
               </button>
             );
           })}
         </div>
         
-        <div className="mt-4 text-center">
+        <div className="mt-5 text-center">
           <Button3D color="green" onClick={onClose}>
             ✓ ГОТОВО
           </Button3D>
@@ -2270,7 +2179,7 @@ const ThemePicker = ({ playerName, currentTheme, onSelect, onClose }) => {
 // --- PARENT DASHBOARD COMPONENTS ---
 
 // PIN Entry Component
-const PARENT_PIN = '1234'; // Default PIN - parents can remember this
+const PARENT_PIN = '0709'; // Default PIN - parents can remember this
 
 const PinEntry = ({ onSuccess, onCancel }) => {
   const [pin, setPin] = useState('');
@@ -2379,10 +2288,6 @@ const PinEntry = ({ onSuccess, onCancel }) => {
           >
             ⌫
           </button>
-        </div>
-
-        <div className="mt-4 text-center text-xs text-slate-400">
-          Код по подразбиране: 1234
         </div>
         </div>
       </div>
@@ -2782,27 +2687,25 @@ export default function App() {
   // Phase 5: Mascot state
   const [mechoEmotion, setMechoEmotion] = useState('idle'); // Mascot emotion state
 
-  // Phase 6: Theme state
-  const [sashaTheme, setSashaTheme] = useState(() => getPlayerTheme('Саша'));
-  const [louTheme, setLouTheme] = useState(() => getPlayerTheme('Лю'));
-  const [showThemePicker, setShowThemePicker] = useState(null); // 'Саша' or 'Лю' or null
+  // Phase 6: Theme state - shared theme for both players
+  const [appTheme, setAppTheme] = useState(() => {
+    const savedTheme = localStorage.getItem('app_theme');
+    if (savedTheme && THEMES[savedTheme]) {
+      return THEMES[savedTheme];
+    }
+    return THEMES.default;
+  });
+  const [showThemePicker, setShowThemePicker] = useState(null); // truthy to show, null to hide
 
   // Phase 8: Parent Dashboard state
   const [showPinEntry, setShowPinEntry] = useState(false);
   const [showParentDashboard, setShowParentDashboard] = useState(false);
 
-  // Get current theme based on view/context
-  const getCurrentTheme = () => {
-    // In specific player contexts, use their theme
-    if (matchingPlayer) return matchingPlayer === 'Саша' ? sashaTheme : louTheme;
-    if (sentencePlayer) return sentencePlayer === 'Саша' ? sashaTheme : louTheme;
-    // In board game, use current player's theme
-    if (view === 'game') return currentPlayer === 0 ? sashaTheme : louTheme;
-    // Default: blend or first player
-    return sashaTheme;
-  };
+  // Learn mode state
+  const [learnPlayer, setLearnPlayer] = useState('Саша');
 
-  const currentTheme = getCurrentTheme();
+  // Get current theme - shared for both players
+  const currentTheme = appTheme;
 
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const shuffledVocab = useMemo(() => [...vocabulary].sort(() => 0.5 - Math.random()), []);
@@ -2850,7 +2753,7 @@ export default function App() {
     }, 80);
 
     const finishRoll = () => {
-      const roll = Math.floor(Math.random() * 3) + 1;
+      const roll = Math.floor(Math.random() * 6) + 1;
       setDiceValue(roll);
       setIsRolling(false);
       
@@ -3034,8 +2937,13 @@ export default function App() {
         </div>
 
         {/* Phase 5: Мечо greeting on menu */}
-        <div className="mb-6">
-          <Mecho emotion="idle" showMessage={true} size="normal" />
+        <div className="mb-6 flex justify-center">
+          <div className="flex items-center gap-2">
+            <Mecho emotion="idle" showMessage={false} size="normal" />
+            <div className="bg-white px-3 py-2 rounded-2xl shadow-lg border-2 border-amber-200 text-sm max-w-[140px] text-center font-bold text-slate-700">
+              Научи български! 🇧🇬
+            </div>
+          </div>
         </div>
 
         {/* Head to Head Record */}
@@ -3068,7 +2976,7 @@ export default function App() {
           <div className="flex gap-3">
             <Button3D color="purple" onClick={() => setShowPlayerSelect('matching')} className="flex-1">
               <LayoutGrid className="w-6 h-6" />
-              МЕМОРИ
+              ЗАПАМЕТЯВАНЕ
             </Button3D>
             <Button3D color="pink" onClick={() => setShowPlayerSelect('sentence')} className="flex-1">
               <Sparkles className="w-6 h-6" />
@@ -3088,23 +2996,15 @@ export default function App() {
             </Button3D>
           </div>
 
-          {/* Phase 6: Theme selection */}
-          <div className={`flex gap-3 p-3 rounded-2xl ${currentTheme.isDark ? 'bg-white/10' : 'bg-white/60'}`}>
-            <button 
-              onClick={() => setShowThemePicker('Саша')}
-              className="flex-1 flex items-center justify-center gap-2 py-3 px-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-bold hover:scale-105 transition-transform shadow-lg"
-            >
-              <span className="text-xl">{sashaTheme.emoji}</span>
-              <span>Саша</span>
-            </button>
-            <button 
-              onClick={() => setShowThemePicker('Лю')}
-              className="flex-1 flex items-center justify-center gap-2 py-3 px-4 bg-gradient-to-r from-pink-500 to-pink-600 text-white rounded-xl font-bold hover:scale-105 transition-transform shadow-lg"
-            >
-              <span className="text-xl">{louTheme.emoji}</span>
-              <span>Лю</span>
-            </button>
-          </div>
+          {/* Phase 6: Theme selection button */}
+          <button 
+            onClick={() => setShowThemePicker(true)}
+            className={`flex items-center justify-center gap-3 py-3 px-6 rounded-2xl font-bold hover:scale-105 transition-transform shadow-lg ${currentTheme.isDark ? 'bg-white/20 text-white' : 'bg-white/80 text-slate-700'}`}
+          >
+            <span className="text-xl">🎨</span>
+            <span>ТЕМА</span>
+            <span className="text-2xl">{appTheme.emoji}</span>
+          </button>
         </div>
         
         <div className={`mt-10 px-6 py-3 rounded-2xl border-2 text-center shadow-lg ${currentTheme.isDark ? 'bg-white/10 border-white/20' : 'bg-white border-slate-200'}`}>
@@ -3141,15 +3041,8 @@ export default function App() {
         {/* Theme Picker Modal */}
         {showThemePicker && (
           <ThemePicker 
-            playerName={showThemePicker}
-            currentTheme={showThemePicker === 'Саша' ? sashaTheme : louTheme}
-            onSelect={(theme) => {
-              if (showThemePicker === 'Саша') {
-                setSashaTheme(theme);
-              } else {
-                setLouTheme(theme);
-              }
-            }}
+            currentTheme={appTheme}
+            onSelect={(theme) => setAppTheme(theme)}
             onClose={() => setShowThemePicker(null)}
           />
         )}
@@ -3329,7 +3222,7 @@ export default function App() {
                   {showPlayerSelect === 'matching' ? '🧠' : '📝'}
                 </div>
                 <h2 className="text-2xl font-black text-slate-800">
-                  {showPlayerSelect === 'matching' ? 'Мемори игра' : 'Изречения'}
+                  {showPlayerSelect === 'matching' ? 'Запаметяване' : 'Изречения'}
                 </h2>
                 <p className="text-slate-600 mt-2">Кой ще играе?</p>
               </div>
@@ -3418,8 +3311,6 @@ export default function App() {
   }
 
   // LEARN MODE
-  const [learnPlayer, setLearnPlayer] = useState('Саша'); // Track who is practicing
-  
   const handleNextCard = () => {
     recordFlashcardSeen(learnPlayer);
     // Check achievements occasionally
@@ -3437,7 +3328,7 @@ export default function App() {
   };
   
   if (view === 'learn') {
-    const learnTheme = learnPlayer === 'Саша' ? sashaTheme : louTheme;
+    const learnTheme = appTheme;
     return (
       <div className={`min-h-screen ${learnTheme.gameBg} ${learnTheme.pattern} flex flex-col items-center font-sans overflow-hidden transition-all duration-500`}>
         {/* Header */}
