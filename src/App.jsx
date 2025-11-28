@@ -941,10 +941,12 @@ const THEMES = {
     name: 'Космос',
     emoji: '🚀',
     colors: { primary: '#6366f1', secondary: '#a855f7', accent: '#fbbf24', text: '#e0e7ff', cardBg: '#1e1b4b' },
-    // "Deep Space" gradient - dark purple using Tailwind classes
-    menuBg: 'bg-gradient-to-br from-indigo-950 via-purple-900 to-slate-900',
-    gameBg: 'bg-gradient-to-br from-slate-900 via-indigo-950 to-purple-950',
-    pattern: 'bg-[radial-gradient(white_1px,transparent_1px)] bg-[size:50px_50px] bg-fixed',
+    // "Deep Space" gradient - dark purple
+    menuBg: 'bg-[#0f0a1e]',
+    gameBg: 'bg-[#0a0612]',
+    pattern: 'bg-[radial-gradient(#ffffff40_1px,transparent_1px)] bg-[length:50px_50px]',
+    menuStyle: { background: 'linear-gradient(135deg, #1a1033 0%, #0f0a1e 50%, #1a0a2e 100%)' },
+    gameStyle: { background: 'linear-gradient(135deg, #0a0612 0%, #1a1033 50%, #0f0a1e 100%)' },
     isDark: true,
   },
   rainbow: {
@@ -2923,7 +2925,10 @@ export default function App() {
   if (view === 'menu') {
     return (
       <div className={`min-h-screen ${currentTheme.menuBg} ${currentTheme.pattern} flex flex-col items-center justify-center p-4 font-sans transition-all duration-500`}
-        style={{ color: currentTheme.isDark ? currentTheme.colors.text : '#1E293B' }}
+        style={{ 
+          color: currentTheme.isDark ? currentTheme.colors.text : '#1E293B',
+          ...(currentTheme.menuStyle || {})
+        }}
       >
         
         <div className="relative mb-8 transform hover:scale-105 transition-transform duration-500">
@@ -3330,7 +3335,10 @@ export default function App() {
   if (view === 'learn') {
     const learnTheme = appTheme;
     return (
-      <div className={`min-h-screen ${learnTheme.gameBg} ${learnTheme.pattern} flex flex-col items-center font-sans overflow-hidden transition-all duration-500`}>
+      <div 
+        className={`min-h-screen ${learnTheme.gameBg} ${learnTheme.pattern} flex flex-col items-center font-sans overflow-hidden transition-all duration-500`}
+        style={learnTheme.gameStyle || {}}
+      >
         {/* Header */}
         <div className={`w-full shadow-sm p-4 flex justify-between items-center z-10 ${learnTheme.isDark ? 'bg-white/10' : 'bg-white'}`}>
           <Button3D color="white" onClick={() => setView('menu')} className="!px-3 !py-2 !text-sm !border-slate-300">
@@ -3405,7 +3413,10 @@ export default function App() {
   if (view === 'game') {
     return (
       <div className={`min-h-screen ${currentTheme.gameBg} ${currentTheme.pattern} font-sans flex flex-col overflow-hidden relative transition-all duration-500`}
-        style={{ color: currentTheme.isDark ? currentTheme.colors.text : undefined }}
+        style={{ 
+          color: currentTheme.isDark ? currentTheme.colors.text : undefined,
+          ...(currentTheme.gameStyle || {})
+        }}
       >
         
         {/* Phase 5: Мечо Mascot - floating in corner */}

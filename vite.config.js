@@ -13,7 +13,7 @@ export default defineConfig({
         name: 'Българско Приключение - Игра за Саша и Лю',
         short_name: 'БГ Приключение',
         description: 'Забавна игра за учене на български за Саша и Лю',
-        start_url: '/',
+        start_url: './',
         display: 'standalone',
         background_color: '#A0E7E5',
         theme_color: '#7c3aed',
