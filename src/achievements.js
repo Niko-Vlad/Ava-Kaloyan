@@ -1,8 +1,9 @@
 // achievements.js - Achievement system for Sasha & Lou's game
-// Browser-compatible version (uses window.Storage and assigns to window object)
+
+import { getPlayerStats, getPlayerData, unlockAchievement, hasAchievement } from './storage.js';
 
 // Achievement definitions
-const ACHIEVEMENTS = {
+export const ACHIEVEMENTS = {
   first_steps: {
     id: 'first_steps',
     emoji: '🌟',
@@ -110,26 +111,26 @@ const ACHIEVEMENTS = {
 };
 
 // Get list of all achievement IDs
-const getAllAchievementIds = () => Object.keys(ACHIEVEMENTS);
+export const getAllAchievementIds = () => Object.keys(ACHIEVEMENTS);
 
 // Get achievement by ID
-const getAchievement = (id) => ACHIEVEMENTS[id];
+export const getAchievement = (id) => ACHIEVEMENTS[id];
 
 // Check all achievements for a player and unlock any new ones
-const checkAndUnlockAchievements = (playerName) => {
-  const stats = window.Storage.getPlayerStats(playerName);
-  const playerData = window.Storage.getPlayerData(playerName);
+export const checkAndUnlockAchievements = (playerName) => {
+  const stats = getPlayerStats(playerName);
+  const playerData = getPlayerData(playerName);
   const newlyUnlocked = [];
   
   for (const [id, achievement] of Object.entries(ACHIEVEMENTS)) {
     // Skip if already has this achievement
-    if (window.Storage.hasAchievement(playerName, id)) {
+    if (hasAchievement(playerName, id)) {
       continue;
     }
     
     // Check if requirement is met
     if (achievement.requirement(stats, playerData)) {
-      const wasNew = window.Storage.unlockAchievement(playerName, id);
+      const wasNew = unlockAchievement(playerName, id);
       if (wasNew) {
         newlyUnlocked.push(achievement);
       }
@@ -140,9 +141,9 @@ const checkAndUnlockAchievements = (playerName) => {
 };
 
 // Get all achievements with unlock status for a player
-const getAchievementsWithStatus = (playerName) => {
-  const stats = window.Storage.getPlayerStats(playerName);
-  const playerData = window.Storage.getPlayerData(playerName);
+export const getAchievementsWithStatus = (playerName) => {
+  const stats = getPlayerStats(playerName);
+  const playerData = getPlayerData(playerName);
   const playerAchievements = playerData.achievements || [];
   
   return Object.values(ACHIEVEMENTS).map(achievement => ({
@@ -156,9 +157,9 @@ const getAchievementsWithStatus = (playerName) => {
 };
 
 // Get progress towards each achievement (for display)
-const getAchievementProgress = (playerName) => {
-  const stats = window.Storage.getPlayerStats(playerName);
-  const playerData = window.Storage.getPlayerData(playerName);
+export const getAchievementProgress = (playerName) => {
+  const stats = getPlayerStats(playerName);
+  const playerData = getPlayerData(playerName);
   
   // Calculate animal questions correct
   const animalCategories = ['Диви', 'Ферма', 'Морски', 'Птици', 'Насекоми', 'Влечуги', 'Животни'];
@@ -191,7 +192,7 @@ const getAchievementProgress = (playerName) => {
 };
 
 // Calculate combo multiplier based on current streak
-const getComboMultiplier = (streak) => {
+export const getComboMultiplier = (streak) => {
   if (streak >= 10) return 3;
   if (streak >= 5) return 2;
   if (streak >= 3) return 1.5;
@@ -199,21 +200,9 @@ const getComboMultiplier = (streak) => {
 };
 
 // Get streak emoji/text display
-const getStreakDisplay = (streak) => {
+export const getStreakDisplay = (streak) => {
   if (streak >= 10) return { emoji: '⚡', text: 'МЪЛНИЯ!', color: 'text-purple-500' };
   if (streak >= 5) return { emoji: '🔥', text: 'На вълна!', color: 'text-orange-500' };
   if (streak >= 3) return { emoji: '✨', text: 'Супер!', color: 'text-yellow-500' };
   return null;
-};
-
-// Export to window object for browser use
-window.Achievements = {
-  ACHIEVEMENTS,
-  getAllAchievementIds,
-  getAchievement,
-  checkAndUnlockAchievements,
-  getAchievementsWithStatus,
-  getAchievementProgress,
-  getComboMultiplier,
-  getStreakDisplay
 };

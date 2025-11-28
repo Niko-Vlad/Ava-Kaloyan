@@ -1,11 +1,9 @@
-// main.js - Bulgarian Adventure Game for Sasha & Lou
-// Browser-compatible version (uses globals from React, lucide-react, and window.Storage/window.Achievements)
+// App.jsx - Bulgarian Adventure Game for Sasha & Lou
 
-const { useState, useEffect, useMemo, useCallback } = React;
-const { Play, BookOpen, RotateCcw, Trophy, ArrowRight, Home, Star, LayoutGrid, CheckCircle, XCircle, Sparkles, Smile, Frown, Award, BarChart3, X, Settings } = lucideReact;
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { Play, BookOpen, RotateCcw, Trophy, ArrowRight, Home, Star, LayoutGrid, CheckCircle, XCircle, Sparkles, Smile, Frown, Award, BarChart3, X, Settings } from 'lucide-react';
 
-// Destructure storage functions for cleaner code
-const {
+import { 
   recordCorrectAnswer, 
   recordWrongAnswer, 
   recordGameEnd, 
@@ -16,17 +14,16 @@ const {
   getCategoryPerformance,
   resetAllProgress,
   resetPlayerProgress
-} = window.Storage;
+} from './storage.js';
 
-// Destructure achievement functions
-const {
+import { 
   checkAndUnlockAchievements, 
   getAchievementsWithStatus, 
   getComboMultiplier,
   getStreakDisplay,
   getAchievementProgress,
   ACHIEVEMENTS
-} = window.Achievements;
+} from './achievements.js';
 
 // --- Data: ULTIMATE Vocabulary List (~1000 words) ---
 const rawVocab = [
@@ -2742,8 +2739,8 @@ const ParentDashboard = ({ onClose }) => {
   );
 };
 
-// Main App Component (assigned to window for mounting)
-function App() {
+// Main App Component
+export default function App() {
   const [view, setView] = useState('menu');
   const [players] = useState(['Саша', 'Лю']);
   const [positions, setPositions] = useState([0, 0]);

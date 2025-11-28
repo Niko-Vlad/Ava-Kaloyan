@@ -1,13 +1,10 @@
 // Service Worker for Българско Приключение PWA
-const CACHE_NAME = 'bg-adventure-v1';
+const CACHE_NAME = 'bg-adventure-v2';
 
-// Files to cache for offline use
+// Files to cache for offline use (Vite serves from root)
 const STATIC_ASSETS = [
   '/',
   '/index.html',
-  '/main.js',
-  '/storage.js',
-  '/achievements.js',
   '/manifest.json'
 ];
 

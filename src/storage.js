@@ -1,5 +1,4 @@
 // storage.js - localStorage utilities for Sasha & Lou's game progress
-// Browser-compatible version (assigns to window object)
 
 const STORAGE_KEY = 'bulgarianAdventure';
 
@@ -21,7 +20,7 @@ const createDefaultPlayerData = () => ({
 });
 
 // Get all game data
-const getGameData = () => {
+export const getGameData = () => {
   try {
     const data = localStorage.getItem(STORAGE_KEY);
     if (!data) {
@@ -43,7 +42,7 @@ const createDefaultGameData = () => ({
 });
 
 // Save all game data
-const saveGameData = (data) => {
+export const saveGameData = (data) => {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   } catch (e) {
@@ -52,14 +51,14 @@ const saveGameData = (data) => {
 };
 
 // Get player data by name
-const getPlayerData = (playerName) => {
+export const getPlayerData = (playerName) => {
   const data = getGameData();
   const key = playerName === 'Саша' ? 'sasha' : 'lou';
   return data[key] || createDefaultPlayerData();
 };
 
 // Update player data
-const updatePlayerData = (playerName, updates) => {
+export const updatePlayerData = (playerName, updates) => {
   const data = getGameData();
   const key = playerName === 'Саша' ? 'sasha' : 'lou';
   data[key] = { ...data[key], ...updates };
@@ -68,7 +67,7 @@ const updatePlayerData = (playerName, updates) => {
 };
 
 // Record a correct answer
-const recordCorrectAnswer = (playerName, word, category) => {
+export const recordCorrectAnswer = (playerName, word, category) => {
   const data = getGameData();
   const key = playerName === 'Саша' ? 'sasha' : 'lou';
   const player = data[key];
@@ -100,7 +99,7 @@ const recordCorrectAnswer = (playerName, word, category) => {
 };
 
 // Record a wrong answer
-const recordWrongAnswer = (playerName, word, category) => {
+export const recordWrongAnswer = (playerName, word, category) => {
   const data = getGameData();
   const key = playerName === 'Саша' ? 'sasha' : 'lou';
   const player = data[key];
@@ -125,7 +124,7 @@ const recordWrongAnswer = (playerName, word, category) => {
 };
 
 // Record game completion
-const recordGameEnd = (playerName, won, hadPerfectGame = false) => {
+export const recordGameEnd = (playerName, won, hadPerfectGame = false) => {
   const data = getGameData();
   const key = playerName === 'Саша' ? 'sasha' : 'lou';
   const player = data[key];
@@ -148,7 +147,7 @@ const recordGameEnd = (playerName, won, hadPerfectGame = false) => {
 };
 
 // Record flashcard viewed
-const recordFlashcardSeen = (playerName) => {
+export const recordFlashcardSeen = (playerName) => {
   const data = getGameData();
   const key = playerName === 'Саша' ? 'sasha' : 'lou';
   data[key].flashcardsSeen = (data[key].flashcardsSeen || 0) + 1;
@@ -156,7 +155,7 @@ const recordFlashcardSeen = (playerName) => {
 };
 
 // Get words that have been answered correctly 3+ times (mastered)
-const getMasteredWords = (playerName) => {
+export const getMasteredWords = (playerName) => {
   const player = getPlayerData(playerName);
   const mastered = [];
   for (const [word, count] of Object.entries(player.wordsCorrect || {})) {
@@ -168,7 +167,7 @@ const getMasteredWords = (playerName) => {
 };
 
 // Get head-to-head record
-const getHeadToHead = () => {
+export const getHeadToHead = () => {
   const data = getGameData();
   return {
     sashaWins: data.sasha?.gamesWon || 0,
@@ -177,7 +176,7 @@ const getHeadToHead = () => {
 };
 
 // Unlock achievement for player
-const unlockAchievement = (playerName, achievementId) => {
+export const unlockAchievement = (playerName, achievementId) => {
   const data = getGameData();
   const key = playerName === 'Саша' ? 'sasha' : 'lou';
   
@@ -195,24 +194,24 @@ const unlockAchievement = (playerName, achievementId) => {
 };
 
 // Check if player has achievement
-const hasAchievement = (playerName, achievementId) => {
+export const hasAchievement = (playerName, achievementId) => {
   const player = getPlayerData(playerName);
   return (player.achievements || []).includes(achievementId);
 };
 
 // Get all achievements for player
-const getPlayerAchievements = (playerName) => {
+export const getPlayerAchievements = (playerName) => {
   const player = getPlayerData(playerName);
   return player.achievements || [];
 };
 
 // Reset all progress (for parent dashboard)
-const resetAllProgress = () => {
+export const resetAllProgress = () => {
   localStorage.removeItem(STORAGE_KEY);
 };
 
 // Reset progress for specific player
-const resetPlayerProgress = (playerName) => {
+export const resetPlayerProgress = (playerName) => {
   const data = getGameData();
   const key = playerName === 'Саша' ? 'sasha' : 'lou';
   data[key] = createDefaultPlayerData();
@@ -220,7 +219,7 @@ const resetPlayerProgress = (playerName) => {
 };
 
 // Get category performance (for parent dashboard)
-const getCategoryPerformance = (playerName) => {
+export const getCategoryPerformance = (playerName) => {
   const player = getPlayerData(playerName);
   const stats = player.categoryStats || {};
   
@@ -242,7 +241,7 @@ const getCategoryPerformance = (playerName) => {
 };
 
 // Get overall stats for a player
-const getPlayerStats = (playerName) => {
+export const getPlayerStats = (playerName) => {
   const player = getPlayerData(playerName);
   const totalAnswers = (player.totalCorrect || 0) + (player.totalWrong || 0);
   const accuracy = totalAnswers > 0 
@@ -265,25 +264,4 @@ const getPlayerStats = (playerName) => {
     flashcardsSeen: player.flashcardsSeen || 0,
     achievementsCount: (player.achievements || []).length
   };
-};
-
-// Export functions to window object for browser use
-window.Storage = {
-  getGameData,
-  saveGameData,
-  getPlayerData,
-  updatePlayerData,
-  recordCorrectAnswer,
-  recordWrongAnswer,
-  recordGameEnd,
-  recordFlashcardSeen,
-  getMasteredWords,
-  getHeadToHead,
-  unlockAchievement,
-  hasAchievement,
-  getPlayerAchievements,
-  resetAllProgress,
-  resetPlayerProgress,
-  getCategoryPerformance,
-  getPlayerStats
 };
