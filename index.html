@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#7c3aed">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="БГ Приключение">
+  <meta name="description" content="Забавна игра за учене на български за Саша и Лю">
+  
+  <title>Българско Приключение 🐻</title>
+  
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/manifest.json">
+  
+  <!-- Apple Touch Icons -->
+  <link rel="apple-touch-icon" href="/icons/icon-192.svg">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="/icons/icon-72.svg">
+  
+  <!-- Tailwind CSS from CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <style>
+    /* Prevent pull-to-refresh on mobile */
+    body {
+      overscroll-behavior-y: contain;
+    }
+    
+    /* Offline indicator styles */
+    .offline-banner {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(90deg, #f97316, #ea580c);
+      color: white;
+      text-align: center;
+      padding: 8px 16px;
+      font-weight: 600;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      animation: slideDown 0.3s ease-out;
+    }
+    
+    @keyframes slideDown {
+      from {
+        transform: translateY(-100%);
+      }
+      to {
+        transform: translateY(0);
+      }
+    }
+    
+    /* Install prompt styles */
+    .install-prompt {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      right: 20px;
+      background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+      color: white;
+      padding: 16px 20px;
+      border-radius: 16px;
+      box-shadow: 0 10px 40px rgba(124, 58, 237, 0.4);
+      z-index: 9998;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      animation: slideUp 0.4s ease-out;
+    }
+    
+    @keyframes slideUp {
+      from {
+        transform: translateY(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+    
+    .install-prompt-text {
+      flex: 1;
+    }
+    
+    .install-prompt-title {
+      font-weight: 700;
+      font-size: 1.1rem;
+      margin-bottom: 4px;
+    }
+    
+    .install-prompt-subtitle {
+      font-size: 0.9rem;
+      opacity: 0.9;
+    }
+    
+    .install-btn {
+      background: white;
+      color: #7c3aed;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      white-space: nowrap;
+    }
+    
+    .install-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 15px rgba(255, 255, 255, 0.3);
+    }
+    
+    .dismiss-btn {
+      background: transparent;
+      border: 2px solid rgba(255, 255, 255, 0.5);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    
+    .dismiss-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+    
+    /* Loading spinner */
+    .app-loading {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e1b4b 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+    
+    .loading-bear {
+      font-size: 80px;
+      animation: bearBounce 1s ease-in-out infinite;
+    }
+    
+    @keyframes bearBounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-20px); }
+    }
+    
+    .loading-text {
+      margin-top: 20px;
+      font-size: 1.5rem;
+      font-weight: 600;
+      opacity: 0.9;
+    }
+    
+    .loading-dots {
+      display: inline-flex;
+      gap: 4px;
+    }
+    
+    .loading-dots span {
+      animation: dotPulse 1.4s ease-in-out infinite;
+    }
+    
+    .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+    
+    @keyframes dotPulse {
+      0%, 80%, 100% { opacity: 0.3; }
+      40% { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Loading screen shown while React loads -->
+  <div id="app-loading" class="app-loading">
+    <div class="loading-bear">🐻</div>
+    <div class="loading-text">
+      Зареждане<span class="loading-dots"><span>.</span><span>.</span><span>.</span></span>
+    </div>
+  </div>
+  
+  <!-- Offline indicator (hidden by default) -->
+  <div id="offline-banner" class="offline-banner" style="display: none;">
+    📡 Офлайн режим - играта работи без интернет!
+  </div>
+  
+  <!-- Install prompt (hidden by default) -->
+  <div id="install-prompt" class="install-prompt" style="display: none;">
+    <div class="install-prompt-text">
+      <div class="install-prompt-title">🐻 Инсталирай играта!</div>
+      <div class="install-prompt-subtitle">Играй офлайн на телефон или таблет</div>
+    </div>
+    <button id="install-btn" class="install-btn">Инсталирай</button>
+    <button id="dismiss-btn" class="dismiss-btn">По-късно</button>
+  </div>
+  
+  <!-- React app root -->
+  <div id="root"></div>
+  
+  <!-- React and ReactDOM from CDN -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  
+  <!-- Lucide React Icons -->
+  <script src="https://unpkg.com/lucide-react@latest/dist/umd/lucide-react.min.js"></script>
+  
+  <!-- Babel for JSX transformation -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  
+  <!-- Storage module -->
+  <script type="text/babel" data-presets="react" src="storage.js"></script>
+  
+  <!-- Achievements module -->
+  <script type="text/babel" data-presets="react" src="achievements.js"></script>
+  
+  <script>
+    // PWA Install Prompt Logic
+    let deferredPrompt = null;
+    const installPromptEl = document.getElementById('install-prompt');
+    const installBtn = document.getElementById('install-btn');
+    const dismissBtn = document.getElementById('dismiss-btn');
+    
+    // Check if already dismissed
+    const promptDismissed = localStorage.getItem('installPromptDismissed');
+    const dismissedTime = promptDismissed ? parseInt(promptDismissed) : 0;
+    const oneDayAgo = Date.now() - (24 * 60 * 60 * 1000);
+    
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      
+      // Only show if not recently dismissed
+      if (dismissedTime < oneDayAgo) {
+        installPromptEl.style.display = 'flex';
+      }
+    });
+    
+    installBtn.addEventListener('click', async () => {
+      if (!deferredPrompt) return;
+      
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      
+      console.log('[PWA] Install outcome:', outcome);
+      deferredPrompt = null;
+      installPromptEl.style.display = 'none';
+    });
+    
+    dismissBtn.addEventListener('click', () => {
+      localStorage.setItem('installPromptDismissed', Date.now().toString());
+      installPromptEl.style.display = 'none';
+    });
+    
+    // Hide prompt if app is already installed
+    window.addEventListener('appinstalled', () => {
+      console.log('[PWA] App installed');
+      installPromptEl.style.display = 'none';
+      deferredPrompt = null;
+    });
+    
+    // Offline/Online status
+    const offlineBanner = document.getElementById('offline-banner');
+    
+    function updateOnlineStatus() {
+      if (navigator.onLine) {
+        offlineBanner.style.display = 'none';
+        document.body.style.paddingTop = '0';
+      } else {
+        offlineBanner.style.display = 'flex';
+        document.body.style.paddingTop = '40px';
+      }
+    }
+    
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+    updateOnlineStatus();
+    
+    // Register Service Worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/service-worker.js')
+          .then((registration) => {
+            console.log('[SW] Registration successful:', registration.scope);
+            
+            // Check for updates
+            registration.addEventListener('updatefound', () => {
+              const newWorker = registration.installing;
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  console.log('[SW] New version available');
+                  // Could show update prompt here
+                }
+              });
+            });
+          })
+          .catch((error) => {
+            console.error('[SW] Registration failed:', error);
+          });
+      });
+    }
+  </script>
+  
+  <!-- Load the app -->
+  <script type="text/babel" data-presets="react" src="main.js"></script>
+  
+  <script type="text/babel">
+    // Mount the React app
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(React.createElement(App));
+  </script>
+  
+  <script>
+    // Hide loading screen when React renders
+    const checkReactLoaded = setInterval(() => {
+      const root = document.getElementById('root');
+      if (root && root.children.length > 0) {
+        document.getElementById('app-loading').style.display = 'none';
+        clearInterval(checkReactLoaded);
+      }
+    }, 100);
+    
+    // Fallback: hide loading after 5 seconds anyway
+    setTimeout(() => {
+      document.getElementById('app-loading').style.display = 'none';
+      clearInterval(checkReactLoaded);
+    }, 5000);
+  </script>
+</body>
+</html>

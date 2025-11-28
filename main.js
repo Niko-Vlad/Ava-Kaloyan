@@ -1,5 +1,32 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { Play, BookOpen, RotateCcw, Trophy, ArrowRight, Home, Star, LayoutGrid, CheckCircle, XCircle, Sparkles, Smile, Frown, Music, Monitor, TreePine, Waves, Hammer, Watch, Calendar } from 'lucide-react';
+// main.js - Bulgarian Adventure Game for Sasha & Lou
+// Browser-compatible version (uses globals from React, lucide-react, and window.Storage/window.Achievements)
+
+const { useState, useEffect, useMemo, useCallback } = React;
+const { Play, BookOpen, RotateCcw, Trophy, ArrowRight, Home, Star, LayoutGrid, CheckCircle, XCircle, Sparkles, Smile, Frown, Award, BarChart3, X, Settings } = lucideReact;
+
+// Destructure storage functions for cleaner code
+const {
+  recordCorrectAnswer, 
+  recordWrongAnswer, 
+  recordGameEnd, 
+  recordFlashcardSeen,
+  getPlayerStats, 
+  getHeadToHead,
+  getPlayerData,
+  getCategoryPerformance,
+  resetAllProgress,
+  resetPlayerProgress
+} = window.Storage;
+
+// Destructure achievement functions
+const {
+  checkAndUnlockAchievements, 
+  getAchievementsWithStatus, 
+  getComboMultiplier,
+  getStreakDisplay,
+  getAchievementProgress,
+  ACHIEVEMENTS
+} = window.Achievements;
 
 // --- Data: ULTIMATE Vocabulary List (~1000 words) ---
 const rawVocab = [
@@ -37,43 +64,13 @@ const rawVocab = [
   ["⛺", "Пирамида", "Форми"],
   ["🏐", "Сфера", "Форми"],
 
-  // --- ВРЕМЕ И КАЛЕНДАР (Time & Calendar) ---
-  ["📅", "Понеделник", "Дни"],
-  ["📅", "Вторник", "Дни"],
-  ["📅", "Сряда", "Дни"],
-  ["📅", "Четвъртък", "Дни"],
-  ["📅", "Петък", "Дни"],
-  ["📅", "Събота", "Дни"],
-  ["📅", "Неделя", "Дни"],
-  ["📅", "Януари", "Месеци"],
-  ["📅", "Февруари", "Месеци"],
-  ["📅", "Март", "Месеци"],
-  ["📅", "Април", "Месеци"],
-  ["📅", "Май", "Месеци"],
-  ["📅", "Юни", "Месеци"],
-  ["📅", "Юли", "Месеци"],
-  ["📅", "Август", "Месеци"],
-  ["📅", "Септември", "Месеци"],
-  ["📅", "Октомври", "Месеци"],
-  ["📅", "Ноември", "Месеци"],
-  ["📅", "Декември", "Месеци"],
-  ["⏱️", "Секунда", "Време"],
-  ["🕰️", "Минута", "Време"],
-  ["⌚", "Час", "Време"],
-  ["📅", "Ден", "Време"],
-  ["📅", "Седмица", "Време"],
-  ["📅", "Месец", "Време"],
-  ["📅", "Година", "Време"],
-  ["⏳", "Век", "Време"],
+  // --- ВРЕМЕ (Time) - Only items with representative icons ---
   ["🌅", "Сутрин", "Време"],
   ["☀️", "Обед", "Време"],
   ["🌇", "Следобед", "Време"],
   ["🌆", "Вечер", "Време"],
   ["🌙", "Нощ", "Време"],
   ["🕛", "Полунощ", "Време"],
-  ["🕰️", "Вчера", "Време"],
-  ["🕰️", "Днес", "Време"],
-  ["🕰️", "Утре", "Време"],
 
   // --- ЕМОЦИИ И ХАРАКТЕР (Emotions & Character) ---
   ["🦁", "Смел", "Характер"],
@@ -865,6 +862,228 @@ const rawVocab = [
 
 const vocabulary = rawVocab.map(([emoji, bg, category]) => ({ emoji, bg, category }));
 
+// --- CELEBRATION DATA ---
+// Lou's celebrations: princesses, cutesy, sparkly things
+const LOU_CELEBRATIONS = [
+  { emoji: "👑", text: "Принцеса!", color: "pink" },
+  { emoji: "🦄", text: "Магично!", color: "purple" },
+  { emoji: "🦋", text: "Прекрасно!", color: "pink" },
+  { emoji: "🌸", text: "Красиво!", color: "rose" },
+  { emoji: "💖", text: "Чудесно!", color: "pink" },
+  { emoji: "✨", text: "Блести!", color: "yellow" },
+  { emoji: "🎀", text: "Сладко!", color: "pink" },
+  { emoji: "🌈", text: "Дъга!", color: "purple" },
+  { emoji: "🧚", text: "Вълшебно!", color: "purple" },
+  { emoji: "💫", text: "Звездичка!", color: "yellow" },
+  { emoji: "🌺", text: "Цветенце!", color: "rose" },
+  { emoji: "💝", text: "Супер!", color: "pink" },
+];
+
+// Sasha's celebrations: Pokemon, superheroes, action
+const SASHA_CELEBRATIONS = [
+  { emoji: "⚡", text: "Прекрасно!", color: "yellow" },
+  { emoji: "🔥", text: "Огнен!", color: "orange" },
+  { emoji: "💪", text: "Силен!", color: "blue" },
+  { emoji: "🦸", text: "Супергерой!", color: "blue" },
+  { emoji: "🐉", text: "Дракон!", color: "green" },
+  { emoji: "🚀", text: "Ракета!", color: "indigo" },
+  { emoji: "⭐", text: "Звезда!", color: "yellow" },
+  { emoji: "🦖", text: "Динозавър!", color: "green" },
+  { emoji: "🎯", text: "Точно!", color: "red" },
+  { emoji: "💥", text: "Бум!", color: "orange" },
+  { emoji: "🏆", text: "Шампион!", color: "yellow" },
+  { emoji: "🦅", text: "Полет!", color: "blue" },
+];
+
+// --- THEME CONFIGURATIONS ---
+const THEMES = {
+  default: {
+    id: 'default',
+    name: 'Класика',
+    emoji: '🎨',
+    description: 'Оригиналната тема',
+    colors: {
+      primary: '#A0E7E5',
+      secondary: '#6366F1',
+      accent: '#FBBF24',
+      text: '#1E293B',
+      cardBg: '#FFFFFF',
+    },
+    menuBg: 'bg-[#A0E7E5]',
+    gameBg: 'bg-[#E0F7FA]',
+    pattern: 'bg-[radial-gradient(#ffffff33_1px,transparent_1px)] bg-[size:20px_20px]',
+  },
+  princess: {
+    id: 'princess',
+    name: 'Принцеса',
+    emoji: '🏰',
+    description: 'Розово и лилаво царство',
+    forPlayer: 'Лю',
+    colors: {
+      primary: '#F9A8D4',
+      secondary: '#A855F7',
+      accent: '#FCD34D',
+      text: '#831843',
+      cardBg: '#FDF2F8',
+    },
+    menuBg: 'bg-gradient-to-br from-pink-300 via-purple-200 to-pink-300',
+    gameBg: 'bg-gradient-to-br from-pink-100 via-purple-50 to-pink-100',
+    pattern: 'bg-[url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M30 5 L35 20 L50 20 L38 30 L42 45 L30 35 L18 45 L22 30 L10 20 L25 20 Z\' fill=\'%23f9a8d433\'/%3E%3C/svg%3E")] bg-[size:60px_60px]',
+  },
+  superhero: {
+    id: 'superhero',
+    name: 'Супергерой',
+    emoji: '⚡',
+    description: 'Сила и екшън!',
+    forPlayer: 'Саша',
+    colors: {
+      primary: '#3B82F6',
+      secondary: '#EF4444',
+      accent: '#FBBF24',
+      text: '#1E3A8A',
+      cardBg: '#EFF6FF',
+    },
+    menuBg: 'bg-gradient-to-br from-blue-500 via-indigo-400 to-blue-500',
+    gameBg: 'bg-gradient-to-br from-blue-100 via-indigo-50 to-blue-100',
+    pattern: 'bg-[url("data:image/svg+xml,%3Csvg width=\'40\' height=\'40\' viewBox=\'0 0 40 40\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Ccircle cx=\'20\' cy=\'20\' r=\'3\' fill=\'%233b82f633\'/%3E%3C/svg%3E")] bg-[size:40px_40px]',
+  },
+  ocean: {
+    id: 'ocean',
+    name: 'Океан',
+    emoji: '🌊',
+    description: 'Подводно приключение',
+    colors: {
+      primary: '#06B6D4',
+      secondary: '#0891B2',
+      accent: '#FDE68A',
+      text: '#164E63',
+      cardBg: '#ECFEFF',
+    },
+    menuBg: 'bg-gradient-to-br from-cyan-400 via-teal-300 to-cyan-400',
+    gameBg: 'bg-gradient-to-br from-cyan-100 via-teal-50 to-cyan-100',
+    pattern: 'bg-[url("data:image/svg+xml,%3Csvg width=\'100\' height=\'20\' viewBox=\'0 0 100 20\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M0 10 Q25 0 50 10 Q75 20 100 10\' stroke=\'%2306b6d422\' fill=\'none\' stroke-width=\'2\'/%3E%3C/svg%3E")] bg-[size:100px_20px]',
+  },
+  forest: {
+    id: 'forest',
+    name: 'Гора',
+    emoji: '🌲',
+    description: 'Вълшебната гора',
+    colors: {
+      primary: '#22C55E',
+      secondary: '#15803D',
+      accent: '#FCD34D',
+      text: '#14532D',
+      cardBg: '#F0FDF4',
+    },
+    menuBg: 'bg-gradient-to-br from-green-400 via-emerald-300 to-green-400',
+    gameBg: 'bg-gradient-to-br from-green-100 via-emerald-50 to-green-100',
+    pattern: 'bg-[url("data:image/svg+xml,%3Csvg width=\'40\' height=\'40\' viewBox=\'0 0 40 40\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M20 5 L25 15 L35 15 L27 22 L30 32 L20 26 L10 32 L13 22 L5 15 L15 15 Z\' fill=\'%2322c55e22\'/%3E%3C/svg%3E")] bg-[size:40px_40px]',
+  },
+  space: {
+    id: 'space',
+    name: 'Космос',
+    emoji: '🚀',
+    description: 'Сред звездите',
+    forPlayer: 'Саша',
+    colors: {
+      primary: '#8B5CF6',
+      secondary: '#4F46E5',
+      accent: '#F59E0B',
+      text: '#E0E7FF',
+      cardBg: '#1E1B4B',
+    },
+    menuBg: 'bg-gradient-to-br from-violet-900 via-indigo-800 to-purple-900',
+    gameBg: 'bg-gradient-to-br from-violet-950 via-indigo-900 to-purple-950',
+    pattern: 'bg-[url("data:image/svg+xml,%3Csvg width=\'100\' height=\'100\' viewBox=\'0 0 100 100\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Ccircle cx=\'10\' cy=\'10\' r=\'1\' fill=\'white\'/%3E%3Ccircle cx=\'50\' cy=\'30\' r=\'1.5\' fill=\'white\'/%3E%3Ccircle cx=\'80\' cy=\'60\' r=\'1\' fill=\'white\'/%3E%3Ccircle cx=\'30\' cy=\'80\' r=\'2\' fill=\'white\'/%3E%3Ccircle cx=\'70\' cy=\'90\' r=\'1\' fill=\'white\'/%3E%3C/svg%3E")] bg-[size:100px_100px]',
+    isDark: true,
+  },
+  garden: {
+    id: 'garden',
+    name: 'Градина',
+    emoji: '🦋',
+    description: 'Цветя и пеперуди',
+    forPlayer: 'Лю',
+    colors: {
+      primary: '#EC4899',
+      secondary: '#84CC16',
+      accent: '#FBBF24',
+      text: '#166534',
+      cardBg: '#FDF4FF',
+    },
+    menuBg: 'bg-gradient-to-br from-pink-300 via-lime-200 to-pink-300',
+    gameBg: 'bg-gradient-to-br from-pink-100 via-lime-50 to-pink-100',
+    pattern: 'bg-[url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Ccircle cx=\'30\' cy=\'30\' r=\'5\' fill=\'%23ec489922\'/%3E%3Ccircle cx=\'30\' cy=\'20\' r=\'4\' fill=\'%23ec489922\'/%3E%3Ccircle cx=\'30\' cy=\'40\' r=\'4\' fill=\'%23ec489922\'/%3E%3Ccircle cx=\'20\' cy=\'30\' r=\'4\' fill=\'%23ec489922\'/%3E%3Ccircle cx=\'40\' cy=\'30\' r=\'4\' fill=\'%23ec489922\'/%3E%3C/svg%3E")] bg-[size:60px_60px]',
+  },
+};
+
+// Helper to get theme for player
+const getPlayerTheme = (playerName) => {
+  const key = `theme_${playerName}`;
+  const savedTheme = localStorage.getItem(key);
+  if (savedTheme && THEMES[savedTheme]) {
+    return THEMES[savedTheme];
+  }
+  // Default themes
+  return playerName === 'Лю' ? THEMES.princess : THEMES.superhero;
+};
+
+const setPlayerTheme = (playerName, themeId) => {
+  const key = `theme_${playerName}`;
+  localStorage.setItem(key, themeId);
+};
+
+// --- SENTENCE DATA for Sentence Builder ---
+const SENTENCES = [
+  // Animals
+  { template: "Кучето е ___", options: ["голямо", "синьо", "квадратно"], answer: "голямо", image: "🐕", category: "Животни" },
+  { template: "___ яде банан", options: ["Маймуната", "Рибата", "Камъкът"], answer: "Маймуната", image: "🐒", category: "Животни" },
+  { template: "Котката е ___", options: ["пухкава", "дървена", "стъклена"], answer: "пухкава", image: "🐱", category: "Животни" },
+  { template: "___ плува във водата", options: ["Рибата", "Птицата", "Лъвът"], answer: "Рибата", image: "🐟", category: "Животни" },
+  { template: "Слонът има дълъг ___", options: ["хобот", "опашка", "клюн"], answer: "хобот", image: "🐘", category: "Животни" },
+  { template: "___ лети в небето", options: ["Птицата", "Кравата", "Жабата"], answer: "Птицата", image: "🐦", category: "Животни" },
+  { template: "Зайчето има дълги ___", options: ["уши", "крила", "рога"], answer: "уши", image: "🐰", category: "Животни" },
+  { template: "___ дава мляко", options: ["Кравата", "Змията", "Паякът"], answer: "Кравата", image: "🐄", category: "Животни" },
+  
+  // Colors
+  { template: "Слънцето е ___", options: ["жълто", "синьо", "черно"], answer: "жълто", image: "☀️", category: "Цветове" },
+  { template: "Небето е ___", options: ["синьо", "червено", "кафяво"], answer: "синьо", image: "🌤️", category: "Цветове" },
+  { template: "Тревата е ___", options: ["зелена", "розова", "оранжева"], answer: "зелена", image: "🌿", category: "Цветове" },
+  { template: "Снегът е ___", options: ["бял", "черен", "лилав"], answer: "бял", image: "❄️", category: "Цветове" },
+  { template: "Доматът е ___", options: ["червен", "син", "бял"], answer: "червен", image: "🍅", category: "Цветове" },
+  { template: "Морковът е ___", options: ["оранжев", "лилав", "розов"], answer: "оранжев", image: "🥕", category: "Цветове" },
+  
+  // Food
+  { template: "Ябълката е ___", options: ["вкусна", "солена", "люта"], answer: "вкусна", image: "🍎", category: "Храна" },
+  { template: "___ е сладък", options: ["Шоколадът", "Лимонът", "Лукът"], answer: "Шоколадът", image: "🍫", category: "Храна" },
+  { template: "Хлябът е ___", options: ["мек", "течен", "кисел"], answer: "мек", image: "🍞", category: "Храна" },
+  { template: "___ е жълт плод", options: ["Бананът", "Ягодата", "Гроздето"], answer: "Бананът", image: "🍌", category: "Храна" },
+  { template: "Сиренето е от ___", options: ["мляко", "вода", "сок"], answer: "мляко", image: "🧀", category: "Храна" },
+  
+  // Family
+  { template: "___ ме обича много", options: ["Мама", "Столът", "Чашата"], answer: "Мама", image: "👩", category: "Семейство" },
+  { template: "Татко е ___", options: ["силен", "малък", "зелен"], answer: "силен", image: "👨", category: "Семейство" },
+  { template: "___ е баща на татко", options: ["Дядо", "Чичо", "Брат"], answer: "Дядо", image: "👴", category: "Семейство" },
+  { template: "Баба прави вкусна ___", options: ["баница", "книга", "топка"], answer: "баница", image: "👵", category: "Семейство" },
+  
+  // Nature
+  { template: "Дървото има зелени ___", options: ["листа", "крака", "очи"], answer: "листа", image: "🌳", category: "Природа" },
+  { template: "___ свети през деня", options: ["Слънцето", "Луната", "Звездите"], answer: "Слънцето", image: "☀️", category: "Природа" },
+  { template: "Цветето има красиви ___", options: ["листенца", "зъби", "колела"], answer: "листенца", image: "🌸", category: "Природа" },
+  { template: "___ вали от облаците", options: ["Дъжд", "Камъни", "Листа"], answer: "Дъжд", image: "🌧️", category: "Природа" },
+  { template: "Планината е много ___", options: ["висока", "мокра", "кръгла"], answer: "висока", image: "⛰️", category: "Природа" },
+  
+  // Body
+  { template: "Очите са за ___", options: ["гледане", "ядене", "ходене"], answer: "гледане", image: "👀", category: "Тяло" },
+  { template: "С ръцете можем да ___", options: ["хващаме", "чуваме", "миришем"], answer: "хващаме", image: "🤲", category: "Тяло" },
+  { template: "Краката са за ___", options: ["ходене", "ядене", "гледане"], answer: "ходене", image: "🦶", category: "Тяло" },
+  { template: "Устата е за ___", options: ["говорене", "ходене", "рисуване"], answer: "говорене", image: "👄", category: "Тяло" },
+  
+  // Actions
+  { template: "Децата обичат да ___", options: ["играят", "спят", "плачат"], answer: "играят", image: "🧒", category: "Действия" },
+  { template: "Рибите могат да ___", options: ["плуват", "летят", "тичат"], answer: "плуват", image: "🐠", category: "Действия" },
+  { template: "Птиците могат да ___", options: ["летят", "плуват", "пеят"], answer: "летят", image: "🦅", category: "Действия" },
+];
+
 // --- UI Components ---
 
 // Juicy 3D Button - IMPROVED CONTRAST
@@ -874,38 +1093,306 @@ const Button3D = ({ onClick, children, color = "blue", className = "", disabled 
     blue: "bg-blue-500 border-blue-700 text-white hover:bg-blue-400",
     pink: "bg-pink-500 border-pink-700 text-white hover:bg-pink-400",
     green: "bg-green-500 border-green-700 text-white hover:bg-green-400",
-    white: "bg-white border-slate-300 text-slate-800 hover:bg-slate-100", // Darker text
+    white: "bg-white border-slate-300 text-slate-800 hover:bg-slate-100",
     indigo: "bg-indigo-500 border-indigo-700 text-white hover:bg-indigo-400",
     purple: "bg-purple-500 border-purple-700 text-white hover:bg-purple-400",
-    yellow: "bg-yellow-400 border-yellow-600 text-yellow-900 hover:bg-yellow-300" // New high contrast yellow
+    yellow: "bg-yellow-400 border-yellow-600 text-yellow-900 hover:bg-yellow-300"
   };
 
   const baseStyle = colors[color] || colors.blue;
 
+  // Debounce to prevent double-tap issues
+  const handleClick = useCallback((e) => {
+    if (disabled) return;
+    onClick?.(e);
+  }, [onClick, disabled]);
+
   return (
     <button
-      onClick={onClick}
+      onClick={handleClick}
       disabled={disabled}
       className={`
         relative px-6 py-4 rounded-2xl font-black text-lg sm:text-xl
-        border-b-[6px] active:border-b-[0px] active:translate-y-[6px]
-        transition-all duration-150 flex items-center justify-center gap-3
-        disabled:opacity-50 disabled:cursor-not-allowed disabled:active:translate-y-0 disabled:active:border-b-[6px]
+        min-h-[48px] min-w-[48px]
+        border-b-[6px] active:border-b-[2px] active:translate-y-[4px] active:scale-[0.98]
+        transition-all duration-100 flex items-center justify-center gap-3
+        disabled:opacity-50 disabled:cursor-not-allowed disabled:active:translate-y-0 disabled:active:border-b-[6px] disabled:active:scale-100
+        touch-manipulation select-none
         ${baseStyle} ${className}
       `}
+      style={{ WebkitTapHighlightColor: 'transparent' }}
     >
       {children}
     </button>
   );
 };
 
+// ============================================
+// МЕЧО THE BEAR CUB MASCOT
+// ============================================
+const MECHO_MESSAGES = {
+  idle: [
+    "Хайде, играй! 🎮",
+    "Аз съм Мечо! 🐻",
+    "Готов ли си?",
+    "Научи български! 📚",
+  ],
+  thinking: [
+    "Хммм... 🤔",
+    "Помисли добре!",
+    "Ти можеш!",
+    "Знам, че знаеш!",
+  ],
+  happy: [
+    "Браво! 🌟",
+    "Супер си!",
+    "Точно така! ✓",
+    "Страхотно! 🎉",
+    "Ти си звезда! ⭐",
+    "Продължавай!",
+  ],
+  excited: [
+    "УАУ! 🔥",
+    "Невероятно!",
+    "Ти си шампион! 🏆",
+    "СТРАХОТНО!",
+    "Какъв герой! 💪",
+  ],
+  encouraging: [
+    "Нищо страшно!",
+    "Опитай пак! 💪",
+    "Учиш се! 📖",
+    "Следващият път!",
+    "Не се отказвай!",
+  ],
+  victory: [
+    "ПОБЕДА! 🏆",
+    "Ти спечели! 🎉",
+    "Браво, шампион!",
+    "Супер играч! 🌟",
+  ],
+};
+
+const Mecho = ({ emotion = 'idle', showMessage = true, size = 'normal' }) => {
+  const [currentMessage, setCurrentMessage] = useState('');
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  // Change message when emotion changes
+  useEffect(() => {
+    const messages = MECHO_MESSAGES[emotion] || MECHO_MESSAGES.idle;
+    setCurrentMessage(messages[Math.floor(Math.random() * messages.length)]);
+    setIsAnimating(true);
+    const timer = setTimeout(() => setIsAnimating(false), 500);
+    return () => clearTimeout(timer);
+  }, [emotion]);
+
+  // Emotion-based styles
+  const emotionStyles = {
+    idle: { 
+      eyeClass: 'bg-slate-800', 
+      mouthClass: 'bg-amber-800 rounded-full w-4 h-2',
+      bodyBounce: '',
+    },
+    thinking: { 
+      eyeClass: 'bg-slate-800', 
+      mouthClass: 'bg-amber-800 rounded-full w-3 h-3',
+      bodyBounce: '',
+    },
+    happy: { 
+      eyeClass: 'bg-slate-800', 
+      mouthClass: 'bg-amber-800 rounded-t-none rounded-b-full w-5 h-3',
+      bodyBounce: 'animate-bounce',
+    },
+    excited: { 
+      eyeClass: 'bg-slate-800 scale-125', 
+      mouthClass: 'bg-amber-800 rounded-full w-6 h-4',
+      bodyBounce: 'animate-bounce',
+    },
+    encouraging: { 
+      eyeClass: 'bg-slate-800', 
+      mouthClass: 'bg-amber-800 rounded-full w-4 h-2 rotate-6',
+      bodyBounce: '',
+    },
+    victory: { 
+      eyeClass: 'bg-slate-800 scale-110', 
+      mouthClass: 'bg-amber-800 rounded-t-none rounded-b-full w-6 h-4',
+      bodyBounce: 'animate-bounce',
+    },
+  };
+
+  const style = emotionStyles[emotion] || emotionStyles.idle;
+  const sizeClasses = size === 'small' ? 'w-16 h-16' : 'w-24 h-24';
+  const messageSize = size === 'small' ? 'text-xs max-w-[100px]' : 'text-sm max-w-[140px]';
+
+  return (
+    <>
+      <style>{`
+        @keyframes mecho-wiggle {
+          0%, 100% { transform: rotate(-3deg); }
+          50% { transform: rotate(3deg); }
+        }
+        @keyframes mecho-blink {
+          0%, 90%, 100% { transform: scaleY(1); }
+          95% { transform: scaleY(0.1); }
+        }
+        @keyframes ear-wiggle {
+          0%, 100% { transform: rotate(-10deg); }
+          50% { transform: rotate(10deg); }
+        }
+        @keyframes speech-pop {
+          0% { transform: scale(0); opacity: 0; }
+          50% { transform: scale(1.1); }
+          100% { transform: scale(1); opacity: 1; }
+        }
+        .mecho-body {
+          animation: mecho-wiggle 2s ease-in-out infinite;
+        }
+        .mecho-eye {
+          animation: mecho-blink 4s ease-in-out infinite;
+        }
+        .mecho-ear {
+          animation: ear-wiggle 1s ease-in-out infinite;
+        }
+        .speech-bubble {
+          animation: speech-pop 0.3s ease-out forwards;
+        }
+      `}</style>
+
+      <div className="relative inline-flex flex-col items-center">
+        {/* Speech Bubble */}
+        {showMessage && currentMessage && (
+          <div className={`speech-bubble absolute -top-2 left-1/2 transform -translate-x-1/2 -translate-y-full bg-white px-3 py-2 rounded-2xl shadow-lg border-2 border-amber-200 ${messageSize} text-center font-bold text-slate-700 z-10`}>
+            {currentMessage}
+            {/* Speech bubble tail */}
+            <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-full">
+              <div className="w-0 h-0 border-l-[8px] border-r-[8px] border-t-[10px] border-l-transparent border-r-transparent border-t-white"></div>
+            </div>
+          </div>
+        )}
+
+        {/* Bear Body */}
+        <div className={`mecho-body ${sizeClasses} ${style.bodyBounce} relative ${isAnimating ? 'scale-110' : 'scale-100'} transition-transform duration-200`}>
+          {/* Ears */}
+          <div className="absolute -top-2 left-1 w-6 h-6 bg-amber-600 rounded-full border-4 border-amber-400 mecho-ear" style={{ animationDelay: '0s' }}></div>
+          <div className="absolute -top-2 right-1 w-6 h-6 bg-amber-600 rounded-full border-4 border-amber-400 mecho-ear" style={{ animationDelay: '0.5s' }}></div>
+
+          {/* Head/Face */}
+          <div className="absolute inset-0 bg-gradient-to-b from-amber-400 to-amber-500 rounded-full shadow-lg border-4 border-amber-300 overflow-hidden">
+            
+            {/* Face lighter area */}
+            <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 w-3/4 h-1/2 bg-amber-200 rounded-full"></div>
+            
+            {/* Eyes */}
+            <div className="absolute top-1/3 left-1/4 flex items-center justify-center">
+              <div className={`mecho-eye w-3 h-4 ${style.eyeClass} rounded-full transition-transform duration-200`}>
+                {/* Eye shine */}
+                <div className="absolute top-0.5 left-0.5 w-1 h-1 bg-white rounded-full"></div>
+              </div>
+            </div>
+            <div className="absolute top-1/3 right-1/4 flex items-center justify-center">
+              <div className={`mecho-eye w-3 h-4 ${style.eyeClass} rounded-full transition-transform duration-200`} style={{ animationDelay: '0.1s' }}>
+                <div className="absolute top-0.5 left-0.5 w-1 h-1 bg-white rounded-full"></div>
+              </div>
+            </div>
+
+            {/* Nose */}
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 w-4 h-3 bg-amber-800 rounded-full"></div>
+
+            {/* Mouth */}
+            <div className={`absolute top-[60%] left-1/2 transform -translate-x-1/2 ${style.mouthClass} transition-all duration-200`}></div>
+
+            {/* Blush (happy emotions) */}
+            {(emotion === 'happy' || emotion === 'excited' || emotion === 'victory') && (
+              <>
+                <div className="absolute top-[45%] left-[10%] w-4 h-2 bg-pink-300 rounded-full opacity-60"></div>
+                <div className="absolute top-[45%] right-[10%] w-4 h-2 bg-pink-300 rounded-full opacity-60"></div>
+              </>
+            )}
+
+            {/* Tears (encouraging - gentle) */}
+            {emotion === 'encouraging' && (
+              <div className="absolute top-[42%] right-[18%] w-1 h-2 bg-blue-300 rounded-full opacity-70"></div>
+            )}
+
+            {/* Stars in eyes (excited/victory) */}
+            {(emotion === 'excited' || emotion === 'victory') && (
+              <>
+                <div className="absolute top-[28%] left-[22%] text-xs">✨</div>
+                <div className="absolute top-[28%] right-[22%] text-xs">✨</div>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Name tag */}
+        {size !== 'small' && (
+          <div className="mt-1 bg-amber-100 px-2 py-0.5 rounded-full text-xs font-black text-amber-700 border border-amber-300">
+            МЕЧО
+          </div>
+        )}
+      </div>
+    </>
+  );
+};
+
 // FIXED: 3D Flashcard with correct CSS flipping
-const Flashcard = ({ item }) => {
+// Custom hook for swipe gestures
+const useSwipe = (onSwipeLeft, onSwipeRight, onSwipeUp, threshold = 50) => {
+  const touchStart = React.useRef({ x: 0, y: 0 });
+  const touchEnd = React.useRef({ x: 0, y: 0 });
+
+  const onTouchStart = useCallback((e) => {
+    touchStart.current = {
+      x: e.touches[0].clientX,
+      y: e.touches[0].clientY
+    };
+    touchEnd.current = { ...touchStart.current };
+  }, []);
+
+  const onTouchMove = useCallback((e) => {
+    touchEnd.current = {
+      x: e.touches[0].clientX,
+      y: e.touches[0].clientY
+    };
+  }, []);
+
+  const onTouchEnd = useCallback(() => {
+    const deltaX = touchStart.current.x - touchEnd.current.x;
+    const deltaY = touchStart.current.y - touchEnd.current.y;
+    const absDeltaX = Math.abs(deltaX);
+    const absDeltaY = Math.abs(deltaY);
+
+    // Determine if horizontal or vertical swipe
+    if (absDeltaX > absDeltaY && absDeltaX > threshold) {
+      if (deltaX > 0) {
+        onSwipeLeft?.();
+      } else {
+        onSwipeRight?.();
+      }
+    } else if (absDeltaY > threshold && deltaY > 0) {
+      onSwipeUp?.();
+    }
+  }, [onSwipeLeft, onSwipeRight, onSwipeUp, threshold]);
+
+  return { onTouchStart, onTouchMove, onTouchEnd };
+};
+
+const Flashcard = ({ item, onSwipeLeft, onSwipeRight }) => {
   const [flipped, setFlipped] = useState(false);
+  const [swipeOffset, setSwipeOffset] = useState(0);
 
   useEffect(() => {
     setFlipped(false);
+    setSwipeOffset(0);
   }, [item]);
+
+  // Swipe handlers
+  const swipeHandlers = useSwipe(
+    () => { onSwipeLeft?.(); }, // Swipe left = next
+    () => { onSwipeRight?.(); }, // Swipe right = prev
+    () => { setFlipped(f => !f); }, // Swipe up = flip
+    50
+  );
 
   return (
     <>
@@ -939,40 +1426,49 @@ const Flashcard = ({ item }) => {
 
       <div 
         onClick={() => setFlipped(!flipped)}
-        className="flip-container w-full max-w-sm aspect-[3/4] cursor-pointer group mx-auto"
+        {...swipeHandlers}
+        className="flip-container w-full max-w-sm aspect-[3/4] cursor-pointer group mx-auto touch-manipulation select-none"
+        style={{ WebkitTapHighlightColor: 'transparent' }}
       >
         <div className={`flip-inner ${flipped ? 'flip-active' : ''}`}>
           
           {/* Front */}
-          <div className="flip-front bg-white rounded-[3rem] shadow-[0_10px_0_rgba(0,0,0,0.15)] border-4 border-slate-100 overflow-hidden flex flex-col items-center justify-center">
+          <div className="flip-front bg-white rounded-[2rem] sm:rounded-[3rem] shadow-[0_10px_0_rgba(0,0,0,0.15)] border-4 border-slate-100 overflow-hidden flex flex-col items-center justify-center">
             <div className="absolute top-0 w-full h-1/2 bg-blue-100 rounded-b-[50%] z-0"></div>
-            <div className="relative z-10 transform transition-transform group-hover:scale-110 duration-300">
-               <div className="text-[8rem] sm:text-[10rem] drop-shadow-lg filter">{item.emoji}</div>
+            <div className="relative z-10 transform transition-transform active:scale-95 duration-150">
+               <div className="text-[6rem] sm:text-[8rem] md:text-[10rem] drop-shadow-lg filter">{item.emoji}</div>
             </div>
             
-            <div className="relative z-10 mt-8">
-               <span className="inline-block px-4 py-2 bg-slate-200 text-slate-600 rounded-full text-sm font-black uppercase tracking-widest shadow-sm">
+            <div className="relative z-10 mt-6 sm:mt-8">
+               <span className="inline-block px-3 sm:px-4 py-2 bg-slate-200 text-slate-600 rounded-full text-xs sm:text-sm font-black uppercase tracking-widest shadow-sm">
                  {item.category}
                </span>
             </div>
-            <div className="relative z-10 mt-4 text-blue-600 font-black animate-pulse text-base bg-blue-50 px-3 py-1 rounded-lg">
-              НАТИСНИ МЕН!
+            <div className="relative z-10 mt-3 sm:mt-4 text-blue-600 font-black animate-pulse text-sm sm:text-base bg-blue-50 px-3 py-1 rounded-lg">
+              👆 ПЛЪЗНИ ИЛИ НАТИСНИ
             </div>
           </div>
 
           {/* Back */}
-          <div className="flip-back bg-gradient-to-br from-indigo-600 to-purple-700 text-white rounded-[3rem] shadow-[0_10px_0_rgba(0,0,0,0.15)] border-4 border-indigo-400 flex flex-col items-center justify-center overflow-hidden">
+          <div className="flip-back bg-gradient-to-br from-indigo-600 to-purple-700 text-white rounded-[2rem] sm:rounded-[3rem] shadow-[0_10px_0_rgba(0,0,0,0.15)] border-4 border-indigo-400 flex flex-col items-center justify-center overflow-hidden">
             <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
-            <div className="relative z-10 text-8xl mb-6 animate-bounce-slow">{item.emoji}</div>
-            <div className="relative z-10 text-4xl sm:text-5xl font-black text-center px-4 leading-tight drop-shadow-md">
+            <div className="relative z-10 text-6xl sm:text-8xl mb-4 sm:mb-6 animate-bounce-slow">{item.emoji}</div>
+            <div className="relative z-10 text-3xl sm:text-4xl md:text-5xl font-black text-center px-4 leading-tight drop-shadow-md">
               {item.bg}
             </div>
-            <div className="relative z-10 mt-4 text-indigo-100 font-bold uppercase tracking-wide opacity-90 bg-white/20 px-3 py-1 rounded-lg">
+            <div className="relative z-10 mt-3 sm:mt-4 text-indigo-100 font-bold uppercase tracking-wide opacity-90 bg-white/20 px-3 py-1 rounded-lg text-sm sm:text-base">
               {item.category}
             </div>
           </div>
 
         </div>
+      </div>
+      
+      {/* Swipe hints */}
+      <div className="flex justify-center gap-8 mt-4 text-slate-400 text-xs sm:text-sm">
+        <span>👈 преди</span>
+        <span>👆 обърни</span>
+        <span>следващ 👉</span>
       </div>
     </>
   );
@@ -1024,13 +1520,13 @@ const GameBoard = ({ players, positions, currentPlayer }) => {
             {/* Players - Avatars */}
             <div className="absolute -top-3 -right-3 flex gap-1 pointer-events-none z-20">
               {p1Here && (
-                <div className="w-10 h-10 rounded-full bg-blue-600 border-4 border-white shadow-md flex items-center justify-center animate-bounce-short">
-                  <span className="text-white text-xs font-black">И1</span>
+                <div className="w-12 h-12 rounded-full bg-blue-600 border-4 border-white shadow-md flex items-center justify-center animate-bounce-short">
+                  <span className="text-white text-[10px] font-black">👦</span>
                 </div>
               )}
               {p2Here && (
-                <div className="w-10 h-10 rounded-full bg-pink-600 border-4 border-white shadow-md flex items-center justify-center animate-bounce-short delay-75">
-                  <span className="text-white text-xs font-black">И2</span>
+                <div className="w-12 h-12 rounded-full bg-pink-500 border-4 border-white shadow-md flex items-center justify-center animate-bounce-short delay-75">
+                  <span className="text-white text-[10px] font-black">👧</span>
                 </div>
               )}
             </div>
@@ -1041,34 +1537,1303 @@ const GameBoard = ({ players, positions, currentPlayer }) => {
   );
 };
 
-export default function App() {
+// Mini Celebration Overlay - shows themed animations on correct answers
+const CelebrationOverlay = ({ celebration, playerIndex, onComplete }) => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onComplete();
+    }, 1800);
+    return () => clearTimeout(timer);
+  }, [onComplete]);
+
+  if (!celebration) return null;
+
+  // Colors based on celebration theme
+  const colorClasses = {
+    pink: "from-pink-400 to-pink-600 text-pink-100",
+    purple: "from-purple-400 to-purple-600 text-purple-100",
+    rose: "from-rose-400 to-rose-600 text-rose-100",
+    yellow: "from-yellow-300 to-yellow-500 text-yellow-900",
+    blue: "from-blue-400 to-blue-600 text-blue-100",
+    green: "from-green-400 to-green-600 text-green-100",
+    orange: "from-orange-400 to-orange-600 text-orange-100",
+    indigo: "from-indigo-400 to-indigo-600 text-indigo-100",
+    red: "from-red-400 to-red-600 text-red-100",
+  };
+
+  const colorClass = colorClasses[celebration.color] || colorClasses.yellow;
+  
+  // Different particle emojis based on player
+  const particles = playerIndex === 1 
+    ? ["✨", "💖", "🦋", "🌸", "💫", "🎀"] // Lou: sparkly, cute
+    : ["⚡", "💥", "🔥", "⭐", "💪", "🚀"]; // Sasha: action, energy
+
+  return (
+    <>
+      <style>{`
+        @keyframes celebration-pop {
+          0% { transform: scale(0) rotate(-10deg); opacity: 0; }
+          50% { transform: scale(1.2) rotate(5deg); opacity: 1; }
+          70% { transform: scale(0.9) rotate(-2deg); }
+          100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+        @keyframes celebration-float {
+          0% { transform: translateY(0) scale(0); opacity: 0; }
+          20% { transform: translateY(-20px) scale(1); opacity: 1; }
+          100% { transform: translateY(-150px) scale(0.5); opacity: 0; }
+        }
+        @keyframes celebration-spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        @keyframes celebration-shake {
+          0%, 100% { transform: translateX(0); }
+          25% { transform: translateX(-5px) rotate(-5deg); }
+          75% { transform: translateX(5px) rotate(5deg); }
+        }
+        .celebration-container {
+          animation: celebration-pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        .celebration-particle {
+          animation: celebration-float 1.5s ease-out forwards;
+        }
+        .celebration-emoji {
+          animation: celebration-shake 0.3s ease-in-out infinite;
+        }
+      `}</style>
+
+      <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-50">
+        {/* Floating particles */}
+        {particles.map((p, i) => (
+          <div
+            key={i}
+            className="celebration-particle absolute text-4xl"
+            style={{
+              left: `${20 + (i * 12)}%`,
+              top: '60%',
+              animationDelay: `${i * 0.1}s`,
+            }}
+          >
+            {p}
+          </div>
+        ))}
+
+        {/* Main celebration badge */}
+        <div className={`celebration-container bg-gradient-to-br ${colorClass} px-8 py-6 rounded-3xl shadow-2xl border-4 border-white/50`}>
+          <div className="text-center">
+            <div className="celebration-emoji text-7xl mb-2">{celebration.emoji}</div>
+            <div className="text-2xl font-black drop-shadow-lg">{celebration.text}</div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};
+
+// Victory Celebration - big winner screen
+const VictoryCelebration = ({ winnerIndex, winnerName }) => {
+  const isLou = winnerIndex === 1;
+  
+  // Different victory themes
+  const theme = isLou ? {
+    bg: "from-pink-400 via-purple-400 to-pink-500",
+    particles: ["👑", "🦄", "✨", "💖", "🌸", "🦋", "🎀", "💫"],
+    title: "Принцесата печели!",
+  } : {
+    bg: "from-blue-500 via-indigo-500 to-blue-600", 
+    particles: ["⚡", "🔥", "💪", "🦸", "🏆", "🚀", "⭐", "💥"],
+    title: "Супергероят печели!",
+  };
+
+  return (
+    <>
+      <style>{`
+        @keyframes victory-confetti {
+          0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
+          100% { transform: translateY(100vh) rotate(720deg); opacity: 0.5; }
+        }
+        @keyframes victory-bounce {
+          0%, 100% { transform: translateY(0) scale(1); }
+          50% { transform: translateY(-20px) scale(1.1); }
+        }
+        @keyframes victory-glow {
+          0%, 100% { box-shadow: 0 0 30px rgba(255,255,255,0.5); }
+          50% { box-shadow: 0 0 60px rgba(255,255,255,0.8); }
+        }
+        .victory-confetti {
+          animation: victory-confetti 3s linear infinite;
+        }
+        .victory-bounce {
+          animation: victory-bounce 1s ease-in-out infinite;
+        }
+        .victory-glow {
+          animation: victory-glow 1.5s ease-in-out infinite;
+        }
+      `}</style>
+
+      {/* Confetti layer */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {theme.particles.concat(theme.particles).map((p, i) => (
+          <div
+            key={i}
+            className="victory-confetti absolute text-3xl"
+            style={{
+              left: `${(i * 7) % 100}%`,
+              animationDelay: `${(i * 0.2) % 3}s`,
+              animationDuration: `${2 + (i % 2)}s`,
+            }}
+          >
+            {p}
+          </div>
+        ))}
+      </div>
+
+      {/* Winner badge */}
+      <div className={`victory-glow bg-gradient-to-br ${theme.bg} p-8 rounded-[3rem] border-4 border-white/50`}>
+        <div className="text-center victory-bounce">
+          <div className="text-8xl mb-4">{isLou ? "👸" : "🦸"}</div>
+          <div className="text-4xl font-black text-white drop-shadow-lg mb-2">
+            {theme.title}
+          </div>
+          <div className="text-6xl font-black text-white drop-shadow-lg">
+            {winnerName}
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};
+
+// ============================================
+// MATCHING GAME COMPONENT (Memory Cards)
+// ============================================
+const MatchingGame = ({ playerName, onComplete, onExit, celebrations }) => {
+  // Select 6 random vocab items for 12 cards (6 pairs)
+  const [gameCards, setGameCards] = useState([]);
+  const [flippedIndices, setFlippedIndices] = useState([]);
+  const [matchedPairs, setMatchedPairs] = useState([]);
+  const [moves, setMoves] = useState(0);
+  const [gameComplete, setGameComplete] = useState(false);
+  const [celebration, setCelebration] = useState(null);
+  const [isChecking, setIsChecking] = useState(false);
+
+  // Initialize game
+  useEffect(() => {
+    initGame();
+  }, []);
+
+  const initGame = () => {
+    // Pick 6 random vocabulary items
+    const shuffledVocab = [...vocabulary].sort(() => 0.5 - Math.random()).slice(0, 6);
+    
+    // Create pairs: one with emoji, one with word
+    const cards = [];
+    shuffledVocab.forEach((item, index) => {
+      cards.push({ id: index * 2, pairId: index, type: 'emoji', content: item.emoji, word: item.bg });
+      cards.push({ id: index * 2 + 1, pairId: index, type: 'word', content: item.bg, word: item.bg });
+    });
+    
+    // Shuffle cards
+    setGameCards(cards.sort(() => 0.5 - Math.random()));
+    setFlippedIndices([]);
+    setMatchedPairs([]);
+    setMoves(0);
+    setGameComplete(false);
+  };
+
+  const handleCardClick = (index) => {
+    // Ignore if checking, already flipped, or already matched
+    if (isChecking || flippedIndices.includes(index) || matchedPairs.includes(gameCards[index].pairId)) {
+      return;
+    }
+
+    const newFlipped = [...flippedIndices, index];
+    setFlippedIndices(newFlipped);
+
+    if (newFlipped.length === 2) {
+      setMoves(m => m + 1);
+      setIsChecking(true);
+      
+      const [first, second] = newFlipped;
+      const firstCard = gameCards[first];
+      const secondCard = gameCards[second];
+
+      if (firstCard.pairId === secondCard.pairId) {
+        // Match found!
+        const newMatched = [...matchedPairs, firstCard.pairId];
+        setMatchedPairs(newMatched);
+        
+        // Show celebration
+        const randomCeleb = celebrations[Math.floor(Math.random() * celebrations.length)];
+        setCelebration(randomCeleb);
+        setTimeout(() => setCelebration(null), 1500);
+        
+        // Record correct answer
+        recordCorrectAnswer(playerName, firstCard.word, 'Мачинг');
+        
+        setTimeout(() => {
+          setFlippedIndices([]);
+          setIsChecking(false);
+          
+          // Check if game complete
+          if (newMatched.length === 6) {
+            setGameComplete(true);
+            recordGameEnd(playerName, true, false);
+            const newAchievements = checkAndUnlockAchievements(playerName);
+          }
+        }, 500);
+      } else {
+        // No match - flip back
+        setTimeout(() => {
+          setFlippedIndices([]);
+          setIsChecking(false);
+        }, 1000);
+      }
+    }
+  };
+
+  return (
+    <>
+      <style>{`
+        @keyframes card-flip {
+          0% { transform: rotateY(0deg); }
+          100% { transform: rotateY(180deg); }
+        }
+        .matching-card {
+          perspective: 1000px;
+        }
+        .matching-card-inner {
+          transition: transform 0.4s;
+          transform-style: preserve-3d;
+        }
+        .matching-card-inner.flipped {
+          transform: rotateY(180deg);
+        }
+        .matching-card-front, .matching-card-back {
+          backface-visibility: hidden;
+          position: absolute;
+          width: 100%;
+          height: 100%;
+        }
+        .matching-card-back {
+          transform: rotateY(180deg);
+        }
+        @keyframes match-pulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.05); }
+        }
+        .matched {
+          animation: match-pulse 0.5s ease-out;
+        }
+      `}</style>
+
+      <div className="min-h-screen bg-gradient-to-br from-purple-400 via-pink-400 to-orange-300 p-4 font-sans">
+        {/* Header */}
+        <div className="bg-white/90 backdrop-blur rounded-2xl p-4 mb-4 flex justify-between items-center">
+          <Button3D color="white" onClick={onExit} className="!px-3 !py-2">
+            <Home size={20} className="text-slate-700" />
+          </Button3D>
+          <div className="text-center">
+            <div className="text-2xl font-black text-slate-800">🧠 Мемори</div>
+            <div className="text-sm text-slate-600">Намери двойките!</div>
+          </div>
+          <div className="text-center bg-purple-100 px-4 py-2 rounded-xl">
+            <div className="text-xs text-purple-600 font-bold">ХОДОВЕ</div>
+            <div className="text-2xl font-black text-purple-700">{moves}</div>
+          </div>
+        </div>
+
+        {/* Player indicator */}
+        <div className="text-center mb-4">
+          <span className={`inline-block px-4 py-2 rounded-full font-black text-white ${playerName === 'Саша' ? 'bg-blue-500' : 'bg-pink-500'}`}>
+            {playerName === 'Саша' ? '👦' : '👧'} {playerName} играе
+          </span>
+        </div>
+
+        {/* Game Grid - 3x4 */}
+        <div className="grid grid-cols-3 gap-2 sm:gap-3 max-w-md mx-auto px-2">
+          {gameCards.map((card, index) => {
+            const isFlipped = flippedIndices.includes(index);
+            const isMatched = matchedPairs.includes(card.pairId);
+            
+            return (
+              <div
+                key={card.id}
+                className="matching-card aspect-[3/4] cursor-pointer touch-manipulation select-none"
+                onClick={() => handleCardClick(index)}
+                style={{ WebkitTapHighlightColor: 'transparent', minHeight: '80px' }}
+              >
+                <div className={`matching-card-inner w-full h-full relative ${isFlipped || isMatched ? 'flipped' : ''}`}>
+                  {/* Card Back (face down) */}
+                  <div className="matching-card-front bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl sm:rounded-2xl shadow-lg border-2 sm:border-4 border-white flex items-center justify-center active:scale-95 transition-transform">
+                    <span className="text-4xl sm:text-5xl">❓</span>
+                  </div>
+                  
+                  {/* Card Front (face up) */}
+                  <div className={`matching-card-back rounded-xl sm:rounded-2xl shadow-lg border-2 sm:border-4 flex items-center justify-center p-1 sm:p-2 ${
+                    isMatched 
+                      ? 'bg-green-100 border-green-400 matched' 
+                      : 'bg-white border-slate-200'
+                  }`}>
+                    {card.type === 'emoji' ? (
+                      <span className="text-4xl sm:text-5xl">{card.content}</span>
+                    ) : (
+                      <span className="text-sm sm:text-lg font-black text-slate-800 text-center leading-tight">{card.content}</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Mini celebration */}
+        {celebration && (
+          <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-40">
+            <div className="bg-gradient-to-br from-yellow-300 to-orange-400 px-8 py-6 rounded-3xl shadow-2xl border-4 border-white/50 animate-bounce">
+              <div className="text-6xl mb-2 text-center">{celebration.emoji}</div>
+              <div className="text-xl font-black text-white">{celebration.text}</div>
+            </div>
+          </div>
+        )}
+
+        {/* Game Complete Modal */}
+        {gameComplete && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <div className="bg-gradient-to-br from-green-400 to-emerald-500 w-full max-w-sm rounded-[2rem] p-8 shadow-2xl text-center">
+              <div className="text-7xl mb-4 animate-bounce">🎉</div>
+              <div className="text-3xl font-black text-white mb-2">БРАВО!</div>
+              <div className="text-white/90 text-lg mb-2">
+                {playerName} намери всички двойки!
+              </div>
+              <div className="bg-white/20 rounded-xl p-4 mb-6">
+                <div className="text-white font-bold">Ходове: {moves}</div>
+                <div className="text-white/80 text-sm">
+                  {moves <= 10 ? '⭐⭐⭐ Перфектно!' : moves <= 15 ? '⭐⭐ Много добре!' : '⭐ Добре!'}
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <Button3D color="white" onClick={initGame} className="flex-1">
+                  🔄 ОТНОВО
+                </Button3D>
+                <Button3D color="yellow" onClick={onExit} className="flex-1">
+                  🏠 МЕНЮ
+                </Button3D>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </>
+  );
+};
+
+// ============================================
+// SENTENCE BUILDER COMPONENT
+// ============================================
+const SentenceBuilder = ({ playerName, onComplete, onExit, celebrations }) => {
+  const [currentSentenceIndex, setCurrentSentenceIndex] = useState(0);
+  const [shuffledSentences, setShuffledSentences] = useState([]);
+  const [selectedAnswer, setSelectedAnswer] = useState(null);
+  const [showResult, setShowResult] = useState(false);
+  const [score, setScore] = useState(0);
+  const [totalAnswered, setTotalAnswered] = useState(0);
+  const [celebration, setCelebration] = useState(null);
+  const [gameComplete, setGameComplete] = useState(false);
+  const [streak, setStreak] = useState(0);
+
+  const TOTAL_SENTENCES = 10; // Play 10 sentences per round
+
+  // Initialize game
+  useEffect(() => {
+    const shuffled = [...SENTENCES].sort(() => 0.5 - Math.random()).slice(0, TOTAL_SENTENCES);
+    setShuffledSentences(shuffled);
+  }, []);
+
+  const currentSentence = shuffledSentences[currentSentenceIndex];
+
+  const handleOptionSelect = (option) => {
+    if (showResult || !currentSentence) return;
+    
+    setSelectedAnswer(option);
+    setShowResult(true);
+    setTotalAnswered(t => t + 1);
+    
+    const isCorrect = option === currentSentence.answer;
+    
+    if (isCorrect) {
+      setScore(s => s + 1);
+      setStreak(s => s + 1);
+      
+      // Show celebration
+      const randomCeleb = celebrations[Math.floor(Math.random() * celebrations.length)];
+      setCelebration(randomCeleb);
+      setTimeout(() => setCelebration(null), 1500);
+      
+      // Record correct answer
+      recordCorrectAnswer(playerName, currentSentence.answer, 'Изречения');
+    } else {
+      setStreak(0);
+      recordWrongAnswer(playerName, currentSentence.answer, 'Изречения');
+    }
+
+    // Move to next after delay
+    setTimeout(() => {
+      if (currentSentenceIndex < TOTAL_SENTENCES - 1) {
+        setCurrentSentenceIndex(i => i + 1);
+        setSelectedAnswer(null);
+        setShowResult(false);
+      } else {
+        // Game complete
+        setGameComplete(true);
+        recordGameEnd(playerName, score >= TOTAL_SENTENCES / 2, score === TOTAL_SENTENCES);
+        checkAndUnlockAchievements(playerName);
+      }
+    }, 1500);
+  };
+
+  const restartGame = () => {
+    const shuffled = [...SENTENCES].sort(() => 0.5 - Math.random()).slice(0, TOTAL_SENTENCES);
+    setShuffledSentences(shuffled);
+    setCurrentSentenceIndex(0);
+    setSelectedAnswer(null);
+    setShowResult(false);
+    setScore(0);
+    setTotalAnswered(0);
+    setStreak(0);
+    setGameComplete(false);
+  };
+
+  if (!currentSentence && !gameComplete) {
+    return <div className="min-h-screen bg-gradient-to-br from-teal-400 to-blue-500 flex items-center justify-center">
+      <div className="text-white text-2xl">Зареждане...</div>
+    </div>;
+  }
+
+  return (
+    <>
+      <div className="min-h-screen bg-gradient-to-br from-teal-400 via-cyan-400 to-blue-500 p-4 font-sans">
+        {/* Header */}
+        <div className="bg-white/90 backdrop-blur rounded-2xl p-4 mb-4 flex justify-between items-center">
+          <Button3D color="white" onClick={onExit} className="!px-3 !py-2">
+            <Home size={20} className="text-slate-700" />
+          </Button3D>
+          <div className="text-center">
+            <div className="text-2xl font-black text-slate-800">📝 Изречения</div>
+            <div className="text-sm text-slate-600">Попълни празното!</div>
+          </div>
+          <div className="text-center bg-teal-100 px-4 py-2 rounded-xl">
+            <div className="text-xs text-teal-600 font-bold">РЕЗУЛТАТ</div>
+            <div className="text-2xl font-black text-teal-700">{score}/{totalAnswered}</div>
+          </div>
+        </div>
+
+        {/* Progress bar */}
+        <div className="max-w-md mx-auto mb-4">
+          <div className="flex justify-between text-white/80 text-sm mb-1">
+            <span>Изречение {currentSentenceIndex + 1} от {TOTAL_SENTENCES}</span>
+            {streak >= 3 && <span className="text-yellow-200">🔥 x{streak}</span>}
+          </div>
+          <div className="w-full bg-white/30 rounded-full h-3">
+            <div 
+              className="bg-white h-3 rounded-full transition-all duration-300"
+              style={{ width: `${((currentSentenceIndex + 1) / TOTAL_SENTENCES) * 100}%` }}
+            ></div>
+          </div>
+        </div>
+
+        {/* Player indicator */}
+        <div className="text-center mb-6">
+          <span className={`inline-block px-4 py-2 rounded-full font-black text-white ${playerName === 'Саша' ? 'bg-blue-600' : 'bg-pink-500'}`}>
+            {playerName === 'Саша' ? '👦' : '👧'} {playerName} играе
+          </span>
+        </div>
+
+        {!gameComplete && currentSentence && (
+          <div className="max-w-md mx-auto px-2">
+            {/* Sentence Card */}
+            <div className="bg-white rounded-[1.5rem] sm:rounded-[2rem] p-4 sm:p-6 shadow-2xl mb-4 sm:mb-6">
+              {/* Image */}
+              <div className="text-center mb-3 sm:mb-4">
+                <span className="text-6xl sm:text-8xl">{currentSentence.image}</span>
+              </div>
+              
+              {/* Category badge */}
+              <div className="text-center mb-3 sm:mb-4">
+                <span className="inline-block bg-slate-100 text-slate-600 px-3 py-1 rounded-full text-xs sm:text-sm font-bold">
+                  {currentSentence.category}
+                </span>
+              </div>
+
+              {/* Sentence with blank */}
+              <div className="text-center text-xl sm:text-2xl font-black text-slate-800 leading-relaxed">
+                {currentSentence.template.split('___').map((part, i, arr) => (
+                  <span key={i}>
+                    {part}
+                    {i < arr.length - 1 && (
+                      <span className={`inline-block min-w-[80px] sm:min-w-[100px] mx-1 px-2 sm:px-3 py-1 rounded-lg border-2 border-dashed text-lg sm:text-2xl ${
+                        showResult && selectedAnswer === currentSentence.answer 
+                          ? 'bg-green-100 border-green-400 text-green-700'
+                          : showResult && selectedAnswer !== currentSentence.answer
+                          ? 'bg-red-100 border-red-400 text-red-700'
+                          : 'bg-slate-100 border-slate-300 text-slate-400'
+                      }`}>
+                        {showResult ? currentSentence.answer : '???'}
+                      </span>
+                    )}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* Options - larger touch targets */}
+            <div className="grid gap-2 sm:gap-3">
+              {currentSentence.options.map((option, idx) => {
+                let btnColor = "white";
+                if (showResult) {
+                  if (option === currentSentence.answer) btnColor = "green";
+                  else if (option === selectedAnswer) btnColor = "pink"; // wrong selection
+                }
+                
+                return (
+                  <Button3D
+                    key={idx}
+                    color={btnColor}
+                    onClick={() => handleOptionSelect(option)}
+                    disabled={showResult}
+                    className={`w-full !text-base sm:!text-lg !py-4 sm:!py-5 !min-h-[56px] ${btnColor === 'white' ? '!text-slate-800' : ''}`}
+                  >
+                    {option}
+                    {showResult && option === currentSentence.answer && <CheckCircle className="w-5 h-5 text-white ml-2" />}
+                    {showResult && option === selectedAnswer && option !== currentSentence.answer && <XCircle className="w-5 h-5 text-white ml-2" />}
+                  </Button3D>
+                );
+              })}
+            </div>
+
+            {/* Feedback */}
+            {showResult && (
+              <div className={`mt-4 text-center text-xl font-black ${selectedAnswer === currentSentence.answer ? 'text-green-600' : 'text-red-500'}`}>
+                {selectedAnswer === currentSentence.answer ? '✓ Правилно!' : `✗ Верният отговор е: ${currentSentence.answer}`}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Mini celebration */}
+        {celebration && (
+          <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-40">
+            <div className="bg-gradient-to-br from-yellow-300 to-orange-400 px-8 py-6 rounded-3xl shadow-2xl border-4 border-white/50 animate-bounce">
+              <div className="text-6xl mb-2 text-center">{celebration.emoji}</div>
+              <div className="text-xl font-black text-white">{celebration.text}</div>
+            </div>
+          </div>
+        )}
+
+        {/* Game Complete Modal */}
+        {gameComplete && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <div className={`w-full max-w-sm rounded-[2rem] p-8 shadow-2xl text-center ${
+              score >= TOTAL_SENTENCES * 0.7 
+                ? 'bg-gradient-to-br from-green-400 to-emerald-500' 
+                : score >= TOTAL_SENTENCES * 0.5
+                ? 'bg-gradient-to-br from-yellow-400 to-orange-500'
+                : 'bg-gradient-to-br from-blue-400 to-indigo-500'
+            }`}>
+              <div className="text-7xl mb-4 animate-bounce">
+                {score >= TOTAL_SENTENCES * 0.7 ? '🌟' : score >= TOTAL_SENTENCES * 0.5 ? '👍' : '💪'}
+              </div>
+              <div className="text-3xl font-black text-white mb-2">
+                {score >= TOTAL_SENTENCES * 0.7 ? 'ОТЛИЧНО!' : score >= TOTAL_SENTENCES * 0.5 ? 'ДОБРЕ!' : 'БРАВО!'}
+              </div>
+              <div className="text-white/90 text-lg mb-4">
+                {playerName} отговори правилно на {score} от {TOTAL_SENTENCES}!
+              </div>
+              <div className="bg-white/20 rounded-xl p-4 mb-6">
+                <div className="text-5xl font-black text-white">{Math.round((score / TOTAL_SENTENCES) * 100)}%</div>
+                <div className="text-white/80">точност</div>
+              </div>
+              <div className="flex gap-3">
+                <Button3D color="white" onClick={restartGame} className="flex-1">
+                  🔄 ОТНОВО
+                </Button3D>
+                <Button3D color="yellow" onClick={onExit} className="flex-1">
+                  🏠 МЕНЮ
+                </Button3D>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </>
+  );
+};
+
+// --- THEME PICKER MODAL ---
+const ThemePicker = ({ playerName, currentTheme, onSelect, onClose }) => {
+  const themeList = Object.values(THEMES);
+  
+  // Get suggested themes for this player
+  const getSuggested = (theme) => {
+    if (!theme.forPlayer) return false;
+    return theme.forPlayer === playerName;
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-3xl p-6 max-w-lg w-full max-h-[85vh] overflow-y-auto shadow-2xl">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-2xl font-black text-gray-800">
+            🎨 Тема за {playerName}
+          </h2>
+          <button 
+            onClick={onClose}
+            className="w-10 h-10 bg-gray-200 hover:bg-gray-300 rounded-full flex items-center justify-center text-xl transition-colors"
+          >
+            ✕
+          </button>
+        </div>
+        
+        <div className="grid grid-cols-2 gap-3">
+          {themeList.map((theme) => {
+            const isSelected = currentTheme.id === theme.id;
+            const isSuggested = getSuggested(theme);
+            
+            return (
+              <button
+                key={theme.id}
+                onClick={() => {
+                  setPlayerTheme(playerName, theme.id);
+                  onSelect(theme);
+                }}
+                className={`
+                  relative p-4 rounded-2xl border-4 transition-all duration-200
+                  ${isSelected 
+                    ? 'border-yellow-400 ring-4 ring-yellow-200 scale-105' 
+                    : 'border-gray-200 hover:border-gray-300 hover:scale-102'
+                  }
+                  ${theme.isDark ? 'text-white' : 'text-gray-800'}
+                `}
+                style={{
+                  background: theme.isDark 
+                    ? `linear-gradient(135deg, ${theme.colors.primary}, ${theme.colors.secondary})`
+                    : `linear-gradient(135deg, ${theme.colors.primary}40, ${theme.colors.secondary}30)`
+                }}
+              >
+                {/* Suggested badge */}
+                {isSuggested && (
+                  <div className="absolute -top-2 -right-2 bg-yellow-400 text-yellow-900 text-xs font-bold px-2 py-1 rounded-full shadow">
+                    ЗА ТЕБ!
+                  </div>
+                )}
+                
+                {/* Selected checkmark */}
+                {isSelected && (
+                  <div className="absolute -top-2 -left-2 bg-green-500 text-white text-sm w-6 h-6 rounded-full flex items-center justify-center shadow">
+                    ✓
+                  </div>
+                )}
+                
+                <div className="text-4xl mb-2">{theme.emoji}</div>
+                <div className="font-bold text-lg">{theme.name}</div>
+                <div className={`text-xs ${theme.isDark ? 'text-white/70' : 'text-gray-500'}`}>
+                  {theme.description}
+                </div>
+                
+                {/* Color preview */}
+                <div className="flex gap-1 mt-2 justify-center">
+                  <div 
+                    className="w-4 h-4 rounded-full border border-white/50"
+                    style={{ backgroundColor: theme.colors.primary }}
+                  />
+                  <div 
+                    className="w-4 h-4 rounded-full border border-white/50"
+                    style={{ backgroundColor: theme.colors.secondary }}
+                  />
+                  <div 
+                    className="w-4 h-4 rounded-full border border-white/50"
+                    style={{ backgroundColor: theme.colors.accent }}
+                  />
+                </div>
+              </button>
+            );
+          })}
+        </div>
+        
+        <div className="mt-4 text-center">
+          <Button3D color="green" onClick={onClose}>
+            ✓ ГОТОВО
+          </Button3D>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// --- PARENT DASHBOARD COMPONENTS ---
+
+// PIN Entry Component
+const PARENT_PIN = '1234'; // Default PIN - parents can remember this
+
+const PinEntry = ({ onSuccess, onCancel }) => {
+  const [pin, setPin] = useState('');
+  const [error, setError] = useState(false);
+  const [shake, setShake] = useState(false);
+
+  const handleDigit = (digit) => {
+    if (pin.length < 4) {
+      const newPin = pin + digit;
+      setPin(newPin);
+      setError(false);
+      
+      if (newPin.length === 4) {
+        // Check PIN
+        if (newPin === PARENT_PIN) {
+          setTimeout(() => onSuccess(), 200);
+        } else {
+          setError(true);
+          setShake(true);
+          setTimeout(() => {
+            setPin('');
+            setShake(false);
+          }, 500);
+        }
+      }
+    }
+  };
+
+  const handleBackspace = () => {
+    setPin(pin.slice(0, -1));
+    setError(false);
+  };
+
+  return (
+    <>
+      <style>{`
+        @keyframes pin-shake {
+          0%, 100% { transform: translateX(0); }
+          20% { transform: translateX(-10px); }
+          40% { transform: translateX(10px); }
+          60% { transform: translateX(-10px); }
+          80% { transform: translateX(10px); }
+        }
+        .animate-shake {
+          animation: pin-shake 0.4s ease-in-out;
+        }
+      `}</style>
+      <div className="fixed inset-0 z-[70] bg-slate-900/95 flex items-center justify-center p-4">
+        <div className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl">
+          <div className="text-center mb-6">
+            <div className="text-4xl mb-2">🔒</div>
+            <h2 className="text-xl font-black text-slate-800">Родителски Достъп</h2>
+            <p className="text-slate-500 text-sm mt-1">Въведи 4-цифрен код</p>
+          </div>
+
+          {/* PIN Display */}
+          <div className={`flex justify-center gap-3 mb-6 ${shake ? 'animate-shake' : ''}`}>
+            {[0, 1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className={`w-12 h-12 rounded-xl border-2 flex items-center justify-center text-2xl font-black transition-all ${
+                  pin.length > i
+                  ? error
+                    ? 'bg-red-100 border-red-400 text-red-600'
+                    : 'bg-indigo-100 border-indigo-400 text-indigo-600'
+                  : 'bg-slate-100 border-slate-300'
+              }`}
+            >
+              {pin.length > i ? '●' : ''}
+            </div>
+          ))}
+        </div>
+
+        {error && (
+          <div className="text-center text-red-500 text-sm font-bold mb-4 animate-pulse">
+            Грешен код! Опитай пак.
+          </div>
+        )}
+
+        {/* Numeric Keypad */}
+        <div className="grid grid-cols-3 gap-2">
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((digit) => (
+            <button
+              key={digit}
+              onClick={() => handleDigit(String(digit))}
+              className="h-14 rounded-xl bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-2xl font-black text-slate-700 transition-all active:scale-95 touch-manipulation"
+            >
+              {digit}
+            </button>
+          ))}
+          <button
+            onClick={onCancel}
+            className="h-14 rounded-xl bg-red-100 hover:bg-red-200 text-red-600 font-bold transition-all active:scale-95 touch-manipulation"
+          >
+            ✕
+          </button>
+          <button
+            onClick={() => handleDigit('0')}
+            className="h-14 rounded-xl bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-2xl font-black text-slate-700 transition-all active:scale-95 touch-manipulation"
+          >
+            0
+          </button>
+          <button
+            onClick={handleBackspace}
+            className="h-14 rounded-xl bg-slate-100 hover:bg-slate-200 text-xl text-slate-600 transition-all active:scale-95 touch-manipulation"
+          >
+            ⌫
+          </button>
+        </div>
+
+        <div className="mt-4 text-center text-xs text-slate-400">
+          Код по подразбиране: 1234
+        </div>
+        </div>
+      </div>
+    </>
+  );
+};
+
+// Parent Dashboard Component
+const ParentDashboard = ({ onClose }) => {
+  const [selectedPlayer, setSelectedPlayer] = useState('Саша');
+  const [showResetConfirm, setShowResetConfirm] = useState(null); // 'Саша', 'Лю', or 'all'
+  
+  const sashaStats = getPlayerStats('Саша');
+  const louStats = getPlayerStats('Лю');
+  const sashaCategoryPerf = getCategoryPerformance('Саша');
+  const louCategoryPerf = getCategoryPerformance('Лю');
+  
+  const stats = selectedPlayer === 'Саша' ? sashaStats : louStats;
+  const categoryPerf = selectedPlayer === 'Саша' ? sashaCategoryPerf : louCategoryPerf;
+
+  // Get words that need more practice (answered wrong more than correct)
+  const getWeakWords = (playerName) => {
+    const player = getPlayerData(playerName);
+    const weak = [];
+    for (const [word, correctCount] of Object.entries(player.wordsCorrect || {})) {
+      // If they've seen the word but less than 3 correct, it needs practice
+      if (correctCount < 3) {
+        weak.push({ word, correct: correctCount });
+      }
+    }
+    return weak.slice(0, 10); // Top 10
+  };
+
+  const weakWords = getWeakWords(selectedPlayer);
+
+  // Get strongest and weakest categories
+  const strongestCategory = categoryPerf.length > 0 
+    ? categoryPerf.reduce((a, b) => a.accuracy > b.accuracy ? a : b) 
+    : null;
+  const weakestCategory = categoryPerf.length > 0 
+    ? categoryPerf.reduce((a, b) => a.accuracy < b.accuracy ? a : b)
+    : null;
+
+  const handleReset = (target) => {
+    if (target === 'all') {
+      resetAllProgress();
+    } else {
+      resetPlayerProgress(target);
+    }
+    setShowResetConfirm(null);
+    // Force re-render by closing and user can reopen
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-[60] bg-slate-100 overflow-y-auto">
+      {/* Header */}
+      <div className="sticky top-0 bg-white shadow-md p-4 z-10">
+        <div className="max-w-2xl mx-auto flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-black text-slate-800">📊 Родителски Панел</h1>
+            <p className="text-sm text-slate-500">Преглед на напредъка</p>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-10 h-10 bg-slate-200 hover:bg-slate-300 rounded-full flex items-center justify-center text-xl transition-colors"
+          >
+            ✕
+          </button>
+        </div>
+      </div>
+
+      <div className="max-w-2xl mx-auto p-4 space-y-4">
+        
+        {/* Player Selector */}
+        <div className="bg-white rounded-2xl p-4 shadow-md">
+          <div className="flex gap-2">
+            <button
+              onClick={() => setSelectedPlayer('Саша')}
+              className={`flex-1 py-3 px-4 rounded-xl font-black transition-all flex items-center justify-center gap-2 ${
+                selectedPlayer === 'Саша'
+                  ? 'bg-blue-600 text-white shadow-lg'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              👦 Саша
+            </button>
+            <button
+              onClick={() => setSelectedPlayer('Лю')}
+              className={`flex-1 py-3 px-4 rounded-xl font-black transition-all flex items-center justify-center gap-2 ${
+                selectedPlayer === 'Лю'
+                  ? 'bg-pink-500 text-white shadow-lg'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              👧 Лю
+            </button>
+          </div>
+        </div>
+
+        {/* Quick Stats Grid */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="bg-white rounded-2xl p-4 shadow-md text-center">
+            <div className="text-3xl font-black text-green-600">{stats.gamesWon}</div>
+            <div className="text-sm font-bold text-slate-500">Победи</div>
+          </div>
+          <div className="bg-white rounded-2xl p-4 shadow-md text-center">
+            <div className="text-3xl font-black text-blue-600">{stats.gamesPlayed}</div>
+            <div className="text-sm font-bold text-slate-500">Игри</div>
+          </div>
+          <div className="bg-white rounded-2xl p-4 shadow-md text-center">
+            <div className="text-3xl font-black text-purple-600">{stats.accuracy}%</div>
+            <div className="text-sm font-bold text-slate-500">Точност</div>
+          </div>
+          <div className="bg-white rounded-2xl p-4 shadow-md text-center">
+            <div className="text-3xl font-black text-amber-600">{stats.masteredWordsCount}</div>
+            <div className="text-sm font-bold text-slate-500">Научени думи</div>
+          </div>
+        </div>
+
+        {/* Detailed Stats */}
+        <div className="bg-white rounded-2xl p-4 shadow-md">
+          <h3 className="font-black text-slate-800 mb-3">📈 Детайлна статистика</h3>
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between py-2 border-b border-slate-100">
+              <span className="text-slate-600">Правилни отговори</span>
+              <span className="font-black text-green-600">{stats.totalCorrect}</span>
+            </div>
+            <div className="flex justify-between py-2 border-b border-slate-100">
+              <span className="text-slate-600">Грешни отговори</span>
+              <span className="font-black text-red-500">{stats.totalWrong}</span>
+            </div>
+            <div className="flex justify-between py-2 border-b border-slate-100">
+              <span className="text-slate-600">Най-дълга серия</span>
+              <span className="font-black text-orange-500">🔥 {stats.bestStreak}</span>
+            </div>
+            <div className="flex justify-between py-2 border-b border-slate-100">
+              <span className="text-slate-600">Перфектни игри</span>
+              <span className="font-black text-yellow-600">⭐ {stats.perfectGames}</span>
+            </div>
+            <div className="flex justify-between py-2 border-b border-slate-100">
+              <span className="text-slate-600">Разгледани карти</span>
+              <span className="font-black text-blue-500">📚 {stats.flashcardsSeen}</span>
+            </div>
+            <div className="flex justify-between py-2">
+              <span className="text-slate-600">Отключени награди</span>
+              <span className="font-black text-purple-600">🏆 {stats.achievementsCount}/12</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Category Performance */}
+        <div className="bg-white rounded-2xl p-4 shadow-md">
+          <h3 className="font-black text-slate-800 mb-3">📚 По категории</h3>
+          
+          {categoryPerf.length === 0 ? (
+            <div className="text-center text-slate-400 py-4">
+              Все още няма данни
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {categoryPerf.map((cat) => (
+                <div key={cat.category} className="relative">
+                  <div className="flex justify-between mb-1">
+                    <span className="text-sm font-bold text-slate-700">{cat.category}</span>
+                    <span className={`text-sm font-black ${
+                      cat.accuracy >= 80 ? 'text-green-600' : 
+                      cat.accuracy >= 60 ? 'text-yellow-600' : 'text-red-500'
+                    }`}>
+                      {cat.accuracy}%
+                    </span>
+                  </div>
+                  <div className="h-3 bg-slate-200 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all ${
+                        cat.accuracy >= 80 ? 'bg-green-500' :
+                        cat.accuracy >= 60 ? 'bg-yellow-500' : 'bg-red-400'
+                      }`}
+                      style={{ width: `${cat.accuracy}%` }}
+                    />
+                  </div>
+                  <div className="text-xs text-slate-400 mt-1">
+                    {cat.correct} правилни / {cat.wrong} грешни
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Insights & Recommendations */}
+        <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl p-4 shadow-md text-white">
+          <h3 className="font-black mb-3">💡 Препоръки</h3>
+          
+          <div className="space-y-3 text-sm">
+            {strongestCategory && (
+              <div className="bg-white/20 rounded-xl p-3">
+                <div className="font-bold">🌟 Силна категория</div>
+                <div className="text-white/90">
+                  {selectedPlayer} се справя отлично с "{strongestCategory.category}" ({strongestCategory.accuracy}% точност)
+                </div>
+              </div>
+            )}
+            
+            {weakestCategory && weakestCategory.accuracy < 70 && (
+              <div className="bg-white/20 rounded-xl p-3">
+                <div className="font-bold">📖 Нужна практика</div>
+                <div className="text-white/90">
+                  Категория "{weakestCategory.category}" има само {weakestCategory.accuracy}% точност. Препоръчваме повече упражнения!
+                </div>
+              </div>
+            )}
+            
+            {stats.bestStreak >= 5 && (
+              <div className="bg-white/20 rounded-xl p-3">
+                <div className="font-bold">🔥 Страхотни серии!</div>
+                <div className="text-white/90">
+                  Най-дългата серия от {stats.bestStreak} показва отлична концентрация!
+                </div>
+              </div>
+            )}
+            
+            {stats.flashcardsSeen < 50 && (
+              <div className="bg-white/20 rounded-xl p-3">
+                <div className="font-bold">📚 Още карти</div>
+                <div className="text-white/90">
+                  Разгледайте повече флашкарти за по-бързо учене!
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Mastered Words */}
+        {stats.masteredWords.length > 0 && (
+          <div className="bg-white rounded-2xl p-4 shadow-md">
+            <h3 className="font-black text-slate-800 mb-3">✅ Научени думи ({stats.masteredWordsCount})</h3>
+            <div className="flex flex-wrap gap-2">
+              {stats.masteredWords.slice(0, 20).map((word) => (
+                <span
+                  key={word}
+                  className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-bold"
+                >
+                  {word}
+                </span>
+              ))}
+              {stats.masteredWordsCount > 20 && (
+                <span className="px-3 py-1 bg-slate-100 text-slate-500 rounded-full text-sm">
+                  +{stats.masteredWordsCount - 20} още
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Words Needing Practice */}
+        {weakWords.length > 0 && (
+          <div className="bg-white rounded-2xl p-4 shadow-md">
+            <h3 className="font-black text-slate-800 mb-3">🎯 Нужна практика</h3>
+            <div className="flex flex-wrap gap-2">
+              {weakWords.map(({ word, correct }) => (
+                <span
+                  key={word}
+                  className="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-sm font-bold"
+                >
+                  {word} ({correct}/3)
+                </span>
+              ))}
+            </div>
+            <p className="text-xs text-slate-400 mt-2">
+              Думи с по-малко от 3 правилни отговора
+            </p>
+          </div>
+        )}
+
+        {/* Head to Head */}
+        <div className="bg-white rounded-2xl p-4 shadow-md">
+          <h3 className="font-black text-slate-800 mb-3">⚔️ Саша vs Лю</h3>
+          <div className="flex items-center justify-around">
+            <div className="text-center">
+              <div className="text-4xl mb-1">👦</div>
+              <div className="text-3xl font-black text-blue-600">{sashaStats.gamesWon}</div>
+              <div className="text-sm text-slate-500">победи</div>
+            </div>
+            <div className="text-2xl font-black text-slate-300">VS</div>
+            <div className="text-center">
+              <div className="text-4xl mb-1">👧</div>
+              <div className="text-3xl font-black text-pink-500">{louStats.gamesWon}</div>
+              <div className="text-sm text-slate-500">победи</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Parent Controls */}
+        <div className="bg-white rounded-2xl p-4 shadow-md">
+          <h3 className="font-black text-slate-800 mb-3">⚙️ Родителски контроли</h3>
+          
+          <div className="space-y-2">
+            <button
+              onClick={() => setShowResetConfirm(selectedPlayer)}
+              className="w-full py-3 px-4 bg-amber-100 hover:bg-amber-200 text-amber-700 rounded-xl font-bold transition-all text-left flex items-center gap-3"
+            >
+              <span>🔄</span>
+              <span>Нулирай прогреса на {selectedPlayer}</span>
+            </button>
+            
+            <button
+              onClick={() => setShowResetConfirm('all')}
+              className="w-full py-3 px-4 bg-red-100 hover:bg-red-200 text-red-700 rounded-xl font-bold transition-all text-left flex items-center gap-3"
+            >
+              <span>⚠️</span>
+              <span>Нулирай ВСИЧКО</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Footer spacing */}
+        <div className="h-8"></div>
+      </div>
+
+      {/* Reset Confirmation Modal */}
+      {showResetConfirm && (
+        <div className="fixed inset-0 z-[70] bg-black/60 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl">
+            <div className="text-center mb-4">
+              <div className="text-5xl mb-2">⚠️</div>
+              <h3 className="text-xl font-black text-slate-800">Сигурен ли си?</h3>
+              <p className="text-slate-500 mt-2">
+                {showResetConfirm === 'all'
+                  ? 'Това ще изтрие ЦЕЛИЯ напредък на двете деца!'
+                  : `Това ще изтрие целия напредък на ${showResetConfirm}!`
+                }
+              </p>
+            </div>
+            
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowResetConfirm(null)}
+                className="flex-1 py-3 bg-slate-200 hover:bg-slate-300 rounded-xl font-bold text-slate-700 transition-all"
+              >
+                Отказ
+              </button>
+              <button
+                onClick={() => handleReset(showResetConfirm)}
+                className="flex-1 py-3 bg-red-500 hover:bg-red-600 rounded-xl font-bold text-white transition-all"
+              >
+                Изтрий
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Main App Component (assigned to window for mounting)
+function App() {
   const [view, setView] = useState('menu');
-  const [players, setPlayers] = useState(['Играч 1', 'Играч 2']);
+  const [players] = useState(['Саша', 'Лю']);
   const [positions, setPositions] = useState([0, 0]);
   const [scores, setScores] = useState([0, 0]);
-  const [currentPlayer, setCurrentPlayer] = useState(0);
-  const [gameMessage, setGameMessage] = useState("Хвърли зара! 🎲");
+  
+  // Fair start system - alternate who starts each game
+  const getStarterIndex = () => {
+    const lastStarter = localStorage.getItem('lastStarter');
+    return lastStarter === 'Саша' ? 1 : 0; // If Sasha started last, Lou starts now
+  };
+  
+  const [currentPlayer, setCurrentPlayer] = useState(getStarterIndex);
+  const [gameMessage, setGameMessage] = useState("");
   const [diceValue, setDiceValue] = useState(null);
   const [showQuestion, setShowQuestion] = useState(false);
   const [currentQuestionData, setCurrentQuestionData] = useState(null);
   const [winner, setWinner] = useState(null);
   const [isRolling, setIsRolling] = useState(false);
-  const [showDiceOverlay, setShowDiceOverlay] = useState(false); // NEW
+  const [showDiceOverlay, setShowDiceOverlay] = useState(false);
   const [lastAnswerCorrect, setLastAnswerCorrect] = useState(null);
+  const [showStartAnnouncement, setShowStartAnnouncement] = useState(false);
+
+  // Phase 2: New state for streaks, achievements, stats
+  const [currentStreak, setCurrentStreak] = useState([0, 0]); // Per player streaks
+  const [wrongAnswersInGame, setWrongAnswersInGame] = useState([0, 0]); // Track for perfect game
+  const [newAchievement, setNewAchievement] = useState(null); // For achievement unlock modal
+  const [showStats, setShowStats] = useState(false); // Stats view
+  const [showAchievements, setShowAchievements] = useState(false); // Achievements gallery
+  const [selectedStatsPlayer, setSelectedStatsPlayer] = useState('Саша');
+
+  // Phase 3: Mini celebrations on correct answers
+  const [currentCelebration, setCurrentCelebration] = useState(null);
+
+  // Phase 4: New game modes state
+  const [matchingPlayer, setMatchingPlayer] = useState(null); // Who's playing matching game
+  const [sentencePlayer, setSentencePlayer] = useState(null); // Who's playing sentence builder
+  const [showPlayerSelect, setShowPlayerSelect] = useState(null); // 'matching' or 'sentence' to show player picker
+
+  // Phase 5: Mascot state
+  const [mechoEmotion, setMechoEmotion] = useState('idle'); // Mascot emotion state
+
+  // Phase 6: Theme state
+  const [sashaTheme, setSashaTheme] = useState(() => getPlayerTheme('Саша'));
+  const [louTheme, setLouTheme] = useState(() => getPlayerTheme('Лю'));
+  const [showThemePicker, setShowThemePicker] = useState(null); // 'Саша' or 'Лю' or null
+
+  // Phase 8: Parent Dashboard state
+  const [showPinEntry, setShowPinEntry] = useState(false);
+  const [showParentDashboard, setShowParentDashboard] = useState(false);
+
+  // Get current theme based on view/context
+  const getCurrentTheme = () => {
+    // In specific player contexts, use their theme
+    if (matchingPlayer) return matchingPlayer === 'Саша' ? sashaTheme : louTheme;
+    if (sentencePlayer) return sentencePlayer === 'Саша' ? sashaTheme : louTheme;
+    // In board game, use current player's theme
+    if (view === 'game') return currentPlayer === 0 ? sashaTheme : louTheme;
+    // Default: blend or first player
+    return sashaTheme;
+  };
+
+  const currentTheme = getCurrentTheme();
 
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const shuffledVocab = useMemo(() => [...vocabulary].sort(() => 0.5 - Math.random()), []);
 
   const resetGame = () => {
+    // Alternate starting player for fairness
+    const lastStarter = localStorage.getItem('lastStarter');
+    const newStarterIndex = lastStarter === 'Саша' ? 1 : 0;
+    const newStarterName = newStarterIndex === 0 ? 'Саша' : 'Лю';
+    
+    // Save who starts this game
+    localStorage.setItem('lastStarter', newStarterName);
+    
     setPositions([0, 0]);
     setScores([0, 0]);
-    setCurrentPlayer(0);
+    setCurrentPlayer(newStarterIndex);
     setDiceValue(null);
     setWinner(null);
-    setGameMessage(`Ред е на ${players[0]}!`);
+    setGameMessage(`Ред е на ${newStarterName}!`);
     setShowQuestion(false);
     setLastAnswerCorrect(null);
     setShowDiceOverlay(false);
+    setShowStartAnnouncement(true);
+    setCurrentStreak([0, 0]); // Reset streaks for new game
+    setWrongAnswersInGame([0, 0]); // Reset wrong answer tracking
+    
+    // Hide announcement after 2 seconds
+    setTimeout(() => setShowStartAnnouncement(false), 2500);
   };
 
   const handleRollDice = () => {
@@ -1103,6 +2868,29 @@ export default function App() {
              setPositions(newPositions);
              setWinner(currentPlayer);
              setGameMessage(`🎉 ${players[currentPlayer]} ПЕЧЕЛИ! 🎉`);
+             
+             // Record game end for both players
+             const winnerName = players[currentPlayer];
+             const loserName = players[currentPlayer === 0 ? 1 : 0];
+             const hadPerfectGame = wrongAnswersInGame[currentPlayer] === 0;
+             
+             recordGameEnd(winnerName, true, hadPerfectGame);
+             recordGameEnd(loserName, false, false);
+             
+             // Check for achievements
+             const winnerAchievements = checkAndUnlockAchievements(winnerName);
+             const loserAchievements = checkAndUnlockAchievements(loserName);
+             
+             // Show any new achievements (prioritize winner)
+             const allNewAchievements = [
+               ...winnerAchievements.map(a => ({ ...a, playerName: winnerName })),
+               ...loserAchievements.map(a => ({ ...a, playerName: loserName }))
+             ];
+             if (allNewAchievements.length > 0) {
+               setTimeout(() => {
+                 setNewAchievement(allNewAchievements[0]);
+               }, 2000);
+             }
         }, 1500);
       } else {
         // Wait 2 seconds so kids can see the number, then show question
@@ -1136,25 +2924,88 @@ export default function App() {
     if (!currentQuestionData || lastAnswerCorrect !== null) return; 
 
     const isCorrect = selectedWord.bg === currentQuestionData.target.bg;
+    const playerName = players[currentPlayer];
+    const word = currentQuestionData.target.bg;
+    const category = currentQuestionData.target.category;
+    
     setLastAnswerCorrect(isCorrect ? 'yes' : 'no');
     
     if (isCorrect) {
+      // Update positions
       const newPositions = [...positions];
       newPositions[currentPlayer] = positions[currentPlayer] + currentQuestionData.pendingMove;
       setPositions(newPositions);
-      setGameMessage("Браво! Ти се местиш напред! 🌟");
+      
+      // Update streak
+      const newStreaks = [...currentStreak];
+      newStreaks[currentPlayer] += 1;
+      setCurrentStreak(newStreaks);
+      
+      // Phase 5: Mascot reacts to correct answer
+      if (newStreaks[currentPlayer] >= 5) {
+        setMechoEmotion('excited');
+      } else {
+        setMechoEmotion('happy');
+      }
+      
+      // Calculate combo multiplier for points
+      const multiplier = getComboMultiplier(newStreaks[currentPlayer]);
+      const basePoints = 10;
+      const earnedPoints = Math.round(basePoints * multiplier);
       
       const newScores = [...scores];
-      newScores[currentPlayer] += 10;
+      newScores[currentPlayer] += earnedPoints;
       setScores(newScores);
+      
+      // Get streak display info
+      const streakInfo = getStreakDisplay(newStreaks[currentPlayer]);
+      if (streakInfo && multiplier > 1) {
+        setGameMessage(`${streakInfo.emoji} ${streakInfo.text} +${earnedPoints} точки!`);
+      } else {
+        setGameMessage("Браво! Ти се местиш напред! 🌟");
+      }
+      
+      // Record to storage
+      recordCorrectAnswer(playerName, word, category);
+      
+      // Phase 3: Trigger mini celebration!
+      const celebrations = currentPlayer === 0 ? SASHA_CELEBRATIONS : LOU_CELEBRATIONS;
+      const randomCelebration = celebrations[Math.floor(Math.random() * celebrations.length)];
+      setCurrentCelebration(randomCelebration);
+      
+      // Check for new achievements
+      const newAchievements = checkAndUnlockAchievements(playerName);
+      if (newAchievements.length > 0) {
+        // Show achievement unlock after a brief delay
+        setTimeout(() => {
+          setNewAchievement({ ...newAchievements[0], playerName });
+        }, 1500);
+      }
     } else {
       setGameMessage(`Ох! Верният отговор беше "${currentQuestionData.target.bg}".`);
+      
+      // Phase 5: Mascot encourages on wrong answer
+      setMechoEmotion('encouraging');
+      
+      // Reset streak
+      const newStreaks = [...currentStreak];
+      newStreaks[currentPlayer] = 0;
+      setCurrentStreak(newStreaks);
+      
+      // Track wrong answers for perfect game achievement
+      const newWrong = [...wrongAnswersInGame];
+      newWrong[currentPlayer] += 1;
+      setWrongAnswersInGame(newWrong);
+      
+      // Record to storage
+      recordWrongAnswer(playerName, word, category);
     }
 
     setTimeout(() => {
       setShowQuestion(false);
       setDiceValue(null);
       setLastAnswerCorrect(null);
+      setMechoEmotion('idle'); // Reset mascot after answer
       if (!winner) {
         const nextPlayer = currentPlayer === 0 ? 1 : 0;
         setCurrentPlayer(nextPlayer);
@@ -1165,75 +3016,499 @@ export default function App() {
 
   // --- Views ---
 
+  // Helper: Get head-to-head record display
+  const h2h = getHeadToHead();
+
   // MAIN MENU
   if (view === 'menu') {
     return (
-      <div className="min-h-screen bg-[#A0E7E5] bg-[radial-gradient(#ffffff33_1px,#A0E7E5_1px)] bg-[size:20px_20px] flex flex-col items-center justify-center p-4 font-sans text-slate-800">
+      <div className={`min-h-screen ${currentTheme.menuBg} ${currentTheme.pattern} flex flex-col items-center justify-center p-4 font-sans transition-all duration-500`}
+        style={{ color: currentTheme.isDark ? currentTheme.colors.text : '#1E293B' }}
+      >
         
-        <div className="relative mb-12 transform hover:scale-105 transition-transform duration-500">
-          <div className="absolute -inset-4 bg-yellow-300 rounded-full blur-xl opacity-50 animate-pulse"></div>
-          <h1 className="relative text-6xl md:text-8xl font-black text-center text-white drop-shadow-[0_5px_0_rgba(0,0,0,0.2)] tracking-tight leading-tight stroke-slate-800">
-             <span className="block text-5xl md:text-7xl text-yellow-100 drop-shadow-md">Българско</span>
+        <div className="relative mb-8 transform hover:scale-105 transition-transform duration-500">
+          <div className="absolute -inset-4 rounded-full blur-xl opacity-50 animate-pulse"
+            style={{ backgroundColor: currentTheme.colors.accent }}
+          ></div>
+          <h1 className={`relative text-5xl md:text-7xl font-black text-center drop-shadow-[0_5px_0_rgba(0,0,0,0.2)] tracking-tight leading-tight ${currentTheme.isDark ? 'text-white' : 'text-white'}`}>
+             <span className={`block text-4xl md:text-6xl drop-shadow-md ${currentTheme.isDark ? 'text-yellow-200' : 'text-yellow-100'}`}>Българско</span>
              Приключение
           </h1>
         </div>
 
-        <div className="flex flex-col gap-6 w-full max-w-sm z-10">
+        {/* Phase 5: Мечо greeting on menu */}
+        <div className="mb-6">
+          <Mecho emotion="idle" showMessage={true} size="normal" />
+        </div>
+
+        {/* Head to Head Record */}
+        <div className={`mb-6 backdrop-blur px-6 py-3 rounded-2xl shadow-lg border-2 ${currentTheme.isDark ? 'bg-white/10 border-white/20' : 'bg-white/90 border-slate-200'}`}>
+          <div className="flex items-center gap-4">
+            <div className="text-center">
+              <div className="text-2xl">👦</div>
+              <div className="font-black text-blue-600">{h2h.sashaWins}</div>
+            </div>
+            <div className={`font-bold ${currentTheme.isDark ? 'text-white/60' : 'text-slate-400'}`}>VS</div>
+            <div className="text-center">
+              <div className="text-2xl">👧</div>
+              <div className="font-black text-pink-500">{h2h.louWins}</div>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-4 w-full max-w-sm z-10">
           <Button3D color="indigo" onClick={() => setView('learn')}>
-            <BookOpen className="w-8 h-8" />
+            <BookOpen className="w-7 h-7" />
             УПРАЖНЕНИЕ
           </Button3D>
 
           <Button3D color="green" onClick={() => { resetGame(); setView('game'); }}>
-            <Play className="w-8 h-8 fill-current" />
+            <Play className="w-7 h-7 fill-current" />
             ИГРАЙ
           </Button3D>
+
+          {/* Phase 4: New game modes */}
+          <div className="flex gap-3">
+            <Button3D color="purple" onClick={() => setShowPlayerSelect('matching')} className="flex-1">
+              <LayoutGrid className="w-6 h-6" />
+              МЕМОРИ
+            </Button3D>
+            <Button3D color="pink" onClick={() => setShowPlayerSelect('sentence')} className="flex-1">
+              <Sparkles className="w-6 h-6" />
+              ИЗРЕЧЕНИЯ
+            </Button3D>
+          </div>
+
+          {/* Stats and achievements */}
+          <div className="flex gap-3">
+            <Button3D color="yellow" onClick={() => setShowAchievements(true)} className="flex-1">
+              <Award className="w-6 h-6" />
+              НАГРАДИ
+            </Button3D>
+            <Button3D color="white" onClick={() => setShowStats(true)} className="flex-1">
+              <BarChart3 className="w-6 h-6" />
+              СТАТИСТИКА
+            </Button3D>
+          </div>
+
+          {/* Phase 6: Theme selection */}
+          <div className={`flex gap-3 p-3 rounded-2xl ${currentTheme.isDark ? 'bg-white/10' : 'bg-white/60'}`}>
+            <button 
+              onClick={() => setShowThemePicker('Саша')}
+              className="flex-1 flex items-center justify-center gap-2 py-3 px-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-bold hover:scale-105 transition-transform shadow-lg"
+            >
+              <span className="text-xl">{sashaTheme.emoji}</span>
+              <span>Саша</span>
+            </button>
+            <button 
+              onClick={() => setShowThemePicker('Лю')}
+              className="flex-1 flex items-center justify-center gap-2 py-3 px-4 bg-gradient-to-r from-pink-500 to-pink-600 text-white rounded-xl font-bold hover:scale-105 transition-transform shadow-lg"
+            >
+              <span className="text-xl">{louTheme.emoji}</span>
+              <span>Лю</span>
+            </button>
+          </div>
         </div>
         
-        <div className="mt-16 bg-white px-6 py-3 rounded-2xl border-2 border-slate-200 text-center shadow-lg">
-          <p className="font-bold text-slate-600">Специално за <span className="text-pink-600 font-black">Саша</span> и <span className="text-blue-600 font-black">Лу</span> ❤️</p>
+        <div className={`mt-10 px-6 py-3 rounded-2xl border-2 text-center shadow-lg ${currentTheme.isDark ? 'bg-white/10 border-white/20' : 'bg-white border-slate-200'}`}>
+          <p className={`font-bold ${currentTheme.isDark ? 'text-white/80' : 'text-slate-600'}`}>Специално за <span className="text-blue-400 font-black">Саша</span> 👦 и <span className="text-pink-400 font-black">Лю</span> 👧 ❤️</p>
         </div>
+
+        {/* Parent Dashboard Button - subtle at bottom */}
+        <button
+          onClick={() => setShowPinEntry(true)}
+          className={`mt-4 flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all hover:scale-105 ${
+            currentTheme.isDark ? 'text-white/50 hover:text-white/80' : 'text-slate-400 hover:text-slate-600'
+          }`}
+        >
+          <Settings className="w-4 h-4" />
+          <span>Родители</span>
+        </button>
+
+        {/* PIN Entry Modal */}
+        {showPinEntry && (
+          <PinEntry
+            onSuccess={() => {
+              setShowPinEntry(false);
+              setShowParentDashboard(true);
+            }}
+            onCancel={() => setShowPinEntry(false)}
+          />
+        )}
+
+        {/* Parent Dashboard */}
+        {showParentDashboard && (
+          <ParentDashboard onClose={() => setShowParentDashboard(false)} />
+        )}
+
+        {/* Theme Picker Modal */}
+        {showThemePicker && (
+          <ThemePicker 
+            playerName={showThemePicker}
+            currentTheme={showThemePicker === 'Саша' ? sashaTheme : louTheme}
+            onSelect={(theme) => {
+              if (showThemePicker === 'Саша') {
+                setSashaTheme(theme);
+              } else {
+                setLouTheme(theme);
+              }
+            }}
+            onClose={() => setShowThemePicker(null)}
+          />
+        )}
+
+        {/* Stats Modal */}
+        {showStats && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <div className="bg-white w-full max-w-md rounded-[2rem] p-6 shadow-2xl max-h-[85vh] overflow-y-auto">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-black text-slate-800">📊 Статистика</h2>
+                <button onClick={() => setShowStats(false)} className="p-2 hover:bg-slate-100 rounded-full">
+                  <X className="w-6 h-6 text-slate-600" />
+                </button>
+              </div>
+              
+              {/* Player selector */}
+              <div className="flex gap-2 mb-6">
+                <button 
+                  onClick={() => setSelectedStatsPlayer('Саша')}
+                  className={`flex-1 py-3 rounded-xl font-black transition-all ${selectedStatsPlayer === 'Саша' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600'}`}
+                >
+                  👦 Саша
+                </button>
+                <button 
+                  onClick={() => setSelectedStatsPlayer('Лю')}
+                  className={`flex-1 py-3 rounded-xl font-black transition-all ${selectedStatsPlayer === 'Лю' ? 'bg-pink-500 text-white' : 'bg-slate-100 text-slate-600'}`}
+                >
+                  👧 Лю
+                </button>
+              </div>
+
+              {/* Stats display */}
+              {(() => {
+                const stats = getPlayerStats(selectedStatsPlayer);
+                const progress = getAchievementProgress(selectedStatsPlayer);
+                return (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="bg-green-50 p-4 rounded-xl text-center">
+                        <div className="text-3xl font-black text-green-600">{stats.gamesWon}</div>
+                        <div className="text-sm font-bold text-green-700">Победи</div>
+                      </div>
+                      <div className="bg-blue-50 p-4 rounded-xl text-center">
+                        <div className="text-3xl font-black text-blue-600">{stats.gamesPlayed}</div>
+                        <div className="text-sm font-bold text-blue-700">Игри</div>
+                      </div>
+                      <div className="bg-yellow-50 p-4 rounded-xl text-center">
+                        <div className="text-3xl font-black text-yellow-600">{stats.accuracy}%</div>
+                        <div className="text-sm font-bold text-yellow-700">Точност</div>
+                      </div>
+                      <div className="bg-orange-50 p-4 rounded-xl text-center">
+                        <div className="text-3xl font-black text-orange-600">{stats.bestStreak}</div>
+                        <div className="text-sm font-bold text-orange-700">Най-добра серия</div>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-purple-50 p-4 rounded-xl">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="font-bold text-purple-700">Научени думи</span>
+                        <span className="font-black text-purple-600">{stats.masteredWordsCount}</span>
+                      </div>
+                      <div className="w-full bg-purple-200 rounded-full h-3">
+                        <div 
+                          className="bg-purple-500 h-3 rounded-full transition-all duration-500"
+                          style={{ width: `${Math.min(100, (stats.masteredWordsCount / 100) * 100)}%` }}
+                        ></div>
+                      </div>
+                    </div>
+
+                    <div className="bg-slate-50 p-4 rounded-xl">
+                      <div className="font-bold text-slate-700 mb-2">🏆 Награди: {stats.achievementsCount}/12</div>
+                      <div className="w-full bg-slate-200 rounded-full h-3">
+                        <div 
+                          className="bg-yellow-500 h-3 rounded-full transition-all duration-500"
+                          style={{ width: `${(stats.achievementsCount / 12) * 100}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+          </div>
+        )}
+
+        {/* Achievements Modal */}
+        {showAchievements && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <div className="bg-white w-full max-w-md rounded-[2rem] p-6 shadow-2xl max-h-[85vh] overflow-y-auto">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-black text-slate-800">🏆 Награди</h2>
+                <button onClick={() => setShowAchievements(false)} className="p-2 hover:bg-slate-100 rounded-full">
+                  <X className="w-6 h-6 text-slate-600" />
+                </button>
+              </div>
+              
+              {/* Player selector */}
+              <div className="flex gap-2 mb-6">
+                <button 
+                  onClick={() => setSelectedStatsPlayer('Саша')}
+                  className={`flex-1 py-3 rounded-xl font-black transition-all ${selectedStatsPlayer === 'Саша' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600'}`}
+                >
+                  👦 Саша
+                </button>
+                <button 
+                  onClick={() => setSelectedStatsPlayer('Лю')}
+                  className={`flex-1 py-3 rounded-xl font-black transition-all ${selectedStatsPlayer === 'Лю' ? 'bg-pink-500 text-white' : 'bg-slate-100 text-slate-600'}`}
+                >
+                  👧 Лю
+                </button>
+              </div>
+
+              {/* Achievements grid */}
+              <div className="grid grid-cols-3 gap-3">
+                {getAchievementsWithStatus(selectedStatsPlayer).map((achievement) => {
+                  const progress = getAchievementProgress(selectedStatsPlayer)[achievement.id];
+                  return (
+                    <div 
+                      key={achievement.id}
+                      className={`relative p-3 rounded-xl text-center transition-all ${
+                        achievement.unlocked 
+                          ? 'bg-yellow-100 border-2 border-yellow-400' 
+                          : 'bg-slate-100 border-2 border-slate-200 opacity-60'
+                      }`}
+                    >
+                      <div className={`text-3xl mb-1 ${achievement.unlocked ? '' : 'grayscale'}`}>
+                        {achievement.emoji}
+                      </div>
+                      <div className="text-xs font-bold text-slate-700 leading-tight">
+                        {achievement.displayName}
+                      </div>
+                      {!achievement.unlocked && progress && (
+                        <div className="text-[10px] text-slate-500 mt-1">
+                          {progress.current}/{progress.target}
+                        </div>
+                      )}
+                      {achievement.unlocked && (
+                        <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+                          <CheckCircle className="w-3 h-3 text-white" />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Achievement Unlock Modal */}
+        {newAchievement && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+            <div className="bg-gradient-to-br from-yellow-400 to-orange-500 w-full max-w-sm rounded-[2rem] p-8 shadow-2xl text-center animate-bounce-slow">
+              <div className="text-6xl mb-4 animate-bounce">{newAchievement.emoji}</div>
+              <div className="text-white text-sm font-bold uppercase tracking-wider mb-2">
+                {newAchievement.playerName} отключи награда!
+              </div>
+              <div className="text-white text-2xl font-black mb-2">
+                {newAchievement.name}
+              </div>
+              <div className="text-white/80 text-sm mb-6">
+                {newAchievement.description}
+              </div>
+              <Button3D color="white" onClick={() => setNewAchievement(null)} className="mx-auto">
+                СУПЕР! 🎉
+              </Button3D>
+            </div>
+          </div>
+        )}
+
+        {/* Player Selection Modal for new game modes */}
+        {showPlayerSelect && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <div className="bg-white w-full max-w-sm rounded-[2rem] p-6 shadow-2xl">
+              <div className="text-center mb-6">
+                <div className="text-5xl mb-3">
+                  {showPlayerSelect === 'matching' ? '🧠' : '📝'}
+                </div>
+                <h2 className="text-2xl font-black text-slate-800">
+                  {showPlayerSelect === 'matching' ? 'Мемори игра' : 'Изречения'}
+                </h2>
+                <p className="text-slate-600 mt-2">Кой ще играе?</p>
+              </div>
+              
+              <div className="flex gap-4 mb-6">
+                <button 
+                  onClick={() => {
+                    if (showPlayerSelect === 'matching') {
+                      setMatchingPlayer('Саша');
+                      setView('matching');
+                    } else {
+                      setSentencePlayer('Саша');
+                      setView('sentence');
+                    }
+                    setShowPlayerSelect(null);
+                  }}
+                  className="flex-1 p-6 rounded-2xl bg-blue-100 border-4 border-blue-300 hover:border-blue-500 hover:bg-blue-200 transition-all"
+                >
+                  <div className="text-5xl mb-2">👦</div>
+                  <div className="font-black text-blue-700 text-xl">Саша</div>
+                </button>
+                <button 
+                  onClick={() => {
+                    if (showPlayerSelect === 'matching') {
+                      setMatchingPlayer('Лю');
+                      setView('matching');
+                    } else {
+                      setSentencePlayer('Лю');
+                      setView('sentence');
+                    }
+                    setShowPlayerSelect(null);
+                  }}
+                  className="flex-1 p-6 rounded-2xl bg-pink-100 border-4 border-pink-300 hover:border-pink-500 hover:bg-pink-200 transition-all"
+                >
+                  <div className="text-5xl mb-2">👧</div>
+                  <div className="font-black text-pink-600 text-xl">Лю</div>
+                </button>
+              </div>
+              
+              <Button3D color="white" onClick={() => setShowPlayerSelect(null)} className="w-full">
+                Отказ
+              </Button3D>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
 
-  // LEARN MODE
-  if (view === 'learn') {
+  // MATCHING GAME VIEW
+  if (view === 'matching' && matchingPlayer) {
+    const celebrations = matchingPlayer === 'Саша' ? SASHA_CELEBRATIONS : LOU_CELEBRATIONS;
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center font-sans overflow-hidden">
+      <MatchingGame 
+        playerName={matchingPlayer}
+        celebrations={celebrations}
+        onExit={() => {
+          setView('menu');
+          setMatchingPlayer(null);
+        }}
+        onComplete={() => {
+          setView('menu');
+          setMatchingPlayer(null);
+        }}
+      />
+    );
+  }
+
+  // SENTENCE BUILDER VIEW
+  if (view === 'sentence' && sentencePlayer) {
+    const celebrations = sentencePlayer === 'Саша' ? SASHA_CELEBRATIONS : LOU_CELEBRATIONS;
+    return (
+      <SentenceBuilder 
+        playerName={sentencePlayer}
+        celebrations={celebrations}
+        onExit={() => {
+          setView('menu');
+          setSentencePlayer(null);
+        }}
+        onComplete={() => {
+          setView('menu');
+          setSentencePlayer(null);
+        }}
+      />
+    );
+  }
+
+  // LEARN MODE
+  const [learnPlayer, setLearnPlayer] = useState('Саша'); // Track who is practicing
+  
+  const handleNextCard = () => {
+    recordFlashcardSeen(learnPlayer);
+    // Check achievements occasionally
+    if (Math.random() < 0.1) {
+      const newAchievements = checkAndUnlockAchievements(learnPlayer);
+      if (newAchievements.length > 0) {
+        setNewAchievement({ ...newAchievements[0], playerName: learnPlayer });
+      }
+    }
+    setCurrentCardIndex(prev => prev < shuffledVocab.length - 1 ? prev + 1 : 0);
+  };
+  
+  const handlePrevCard = () => {
+    setCurrentCardIndex(prev => prev > 0 ? prev - 1 : shuffledVocab.length - 1);
+  };
+  
+  if (view === 'learn') {
+    const learnTheme = learnPlayer === 'Саша' ? sashaTheme : louTheme;
+    return (
+      <div className={`min-h-screen ${learnTheme.gameBg} ${learnTheme.pattern} flex flex-col items-center font-sans overflow-hidden transition-all duration-500`}>
         {/* Header */}
-        <div className="w-full bg-white shadow-sm p-4 flex justify-between items-center z-10">
+        <div className={`w-full shadow-sm p-4 flex justify-between items-center z-10 ${learnTheme.isDark ? 'bg-white/10' : 'bg-white'}`}>
           <Button3D color="white" onClick={() => setView('menu')} className="!px-3 !py-2 !text-sm !border-slate-300">
             <Home size={20} className="text-slate-700" />
           </Button3D>
           <div className="text-center">
-            <h2 className="text-xl font-black text-slate-800 uppercase tracking-wider">Карти</h2>
+            <h2 className={`text-xl font-black uppercase tracking-wider ${learnTheme.isDark ? 'text-white' : 'text-slate-800'}`}>Карти</h2>
           </div>
-          <div className="w-12"></div>
+          {/* Player selector for learn mode */}
+          <button 
+            onClick={() => setLearnPlayer(p => p === 'Саша' ? 'Лю' : 'Саша')}
+            className={`px-3 py-2 rounded-xl font-bold text-sm transition-all ${
+              learnPlayer === 'Саша' ? 'bg-blue-100 text-blue-600' : 'bg-pink-100 text-pink-600'
+            }`}
+          >
+            {learnPlayer === 'Саша' ? '👦' : '👧'}
+          </button>
         </div>
 
         {/* Content */}
-        <div className="flex-1 w-full max-w-3xl flex flex-col justify-center items-center p-6 relative">
+        <div className="flex-1 w-full max-w-3xl flex flex-col justify-center items-center p-4 sm:p-6 relative">
           
-          <div className="w-full mb-8">
-             <Flashcard item={shuffledVocab[currentCardIndex]} />
+          <div className="w-full mb-4 sm:mb-8">
+             <Flashcard 
+               item={shuffledVocab[currentCardIndex]} 
+               onSwipeLeft={handleNextCard}
+               onSwipeRight={handlePrevCard}
+             />
           </div>
 
           {/* Controls */}
-          <div className="flex items-center gap-6">
-            <Button3D color="white" onClick={() => setCurrentCardIndex(prev => prev > 0 ? prev - 1 : shuffledVocab.length - 1)}>
+          <div className="flex items-center gap-4 sm:gap-6">
+            <Button3D color="white" onClick={handlePrevCard} className="!min-w-[56px] !min-h-[56px]">
               <ArrowRight className="transform rotate-180 text-slate-700" />
             </Button3D>
             
-            <div className="bg-white px-6 py-3 rounded-2xl font-black text-slate-700 text-xl shadow-md border border-slate-200">
+            <div className={`px-4 sm:px-6 py-2 sm:py-3 rounded-2xl font-black text-lg sm:text-xl shadow-md border ${learnTheme.isDark ? 'bg-white/10 border-white/20 text-white' : 'bg-white border-slate-200 text-slate-700'}`}>
               {currentCardIndex + 1} / {shuffledVocab.length}
             </div>
 
-            <Button3D color="white" onClick={() => setCurrentCardIndex(prev => prev < shuffledVocab.length - 1 ? prev + 1 : 0)}>
+            <Button3D color="white" onClick={handleNextCard} className="!min-w-[56px] !min-h-[56px]">
               <ArrowRight className="text-slate-700" />
             </Button3D>
           </div>
         </div>
+        
+        {/* Achievement Unlock Modal in Learn Mode */}
+        {newAchievement && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+            <div className="bg-gradient-to-br from-yellow-400 to-orange-500 w-full max-w-sm rounded-[2rem] p-8 shadow-2xl text-center animate-bounce-slow">
+              <div className="text-6xl mb-4 animate-bounce">{newAchievement.emoji}</div>
+              <div className="text-white text-sm font-bold uppercase tracking-wider mb-2">
+                {newAchievement.playerName} отключи награда!
+              </div>
+              <div className="text-white text-2xl font-black mb-2">
+                {newAchievement.name}
+              </div>
+              <div className="text-white/80 text-sm mb-6">
+                {newAchievement.description}
+              </div>
+              <Button3D color="white" onClick={() => setNewAchievement(null)} className="mx-auto">
+                СУПЕР! 🎉
+              </Button3D>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -1241,23 +3516,36 @@ export default function App() {
   // GAME MODE
   if (view === 'game') {
     return (
-      <div className="min-h-screen bg-[#E0F7FA] font-sans flex flex-col overflow-hidden relative">
+      <div className={`min-h-screen ${currentTheme.gameBg} ${currentTheme.pattern} font-sans flex flex-col overflow-hidden relative transition-all duration-500`}
+        style={{ color: currentTheme.isDark ? currentTheme.colors.text : undefined }}
+      >
         
+        {/* Phase 5: Мечо Mascot - floating in corner */}
+        <div className="fixed bottom-24 left-4 z-40 pointer-events-none">
+          <Mecho 
+            emotion={winner ? 'victory' : showQuestion ? 'thinking' : mechoEmotion} 
+            showMessage={true}
+            size="normal"
+          />
+        </div>
+
         {/* Top Bar */}
-        <div className="bg-white/90 backdrop-blur-md p-4 shadow-sm z-20 sticky top-0">
+        <div className={`backdrop-blur-md p-4 shadow-sm z-20 sticky top-0 ${currentTheme.isDark ? 'bg-white/10' : 'bg-white/90'}`}>
           <div className="max-w-4xl mx-auto flex justify-between items-center">
             <Button3D color="white" onClick={() => setView('menu')} className="!px-3 !py-2 !border-slate-300">
               <Home size={20} className="text-slate-700" />
             </Button3D>
 
             {/* Score Pill */}
-            <div className="flex bg-white rounded-2xl p-1 shadow-md border border-slate-200 gap-1">
-              <div className={`px-4 py-2 rounded-xl flex items-center gap-2 transition-all ${currentPlayer === 0 ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400'}`}>
-                <span className="font-black text-sm">И1</span>
+            <div className={`flex rounded-2xl p-1 shadow-md border gap-1 ${currentTheme.isDark ? 'bg-white/10 border-white/20' : 'bg-white border-slate-200'}`}>
+              <div className={`px-3 py-2 rounded-xl flex items-center gap-2 transition-all ${currentPlayer === 0 ? 'bg-blue-600 text-white shadow-md' : currentTheme.isDark ? 'text-white/50' : 'text-slate-400'}`}>
+                <span className="text-base">👦</span>
+                <span className="font-black text-sm hidden sm:inline">Саша</span>
                 <span className="font-black text-lg">{scores[0]}</span>
               </div>
-              <div className={`px-4 py-2 rounded-xl flex items-center gap-2 transition-all ${currentPlayer === 1 ? 'bg-pink-600 text-white shadow-md' : 'text-slate-400'}`}>
-                <span className="font-black text-sm">И2</span>
+              <div className={`px-3 py-2 rounded-xl flex items-center gap-2 transition-all ${currentPlayer === 1 ? 'bg-pink-500 text-white shadow-md' : currentTheme.isDark ? 'text-white/50' : 'text-slate-400'}`}>
+                <span className="text-base">👧</span>
+                <span className="font-black text-sm hidden sm:inline">Лю</span>
                 <span className="font-black text-lg">{scores[1]}</span>
               </div>
             </div>
@@ -1271,6 +3559,22 @@ export default function App() {
         {/* Scrollable Game Area */}
         <div className="flex-1 overflow-y-auto pb-40 px-4 pt-6">
           
+          {/* Streak Display */}
+          {(() => {
+            const streak = currentStreak[currentPlayer];
+            const streakInfo = getStreakDisplay(streak);
+            if (streakInfo && streak >= 3) {
+              return (
+                <div className="max-w-md mx-auto text-center mb-4">
+                  <div className={`inline-block px-4 py-2 rounded-full ${streakInfo.color} bg-white shadow-md font-black text-lg animate-pulse`}>
+                    {streakInfo.emoji} x{streak} {streakInfo.text}
+                  </div>
+                </div>
+              );
+            }
+            return null;
+          })()}
+          
           {/* Status Message */}
           <div className="max-w-md mx-auto text-center mb-8">
             <div className={`inline-block px-6 py-3 rounded-2xl text-white font-black text-lg shadow-lg transform transition-all hover:scale-105 ${winner ? 'bg-yellow-500' : 'bg-slate-700'}`}>
@@ -1281,23 +3585,23 @@ export default function App() {
           <GameBoard players={players} positions={positions} currentPlayer={currentPlayer} />
         </div>
 
-        {/* Bottom Action Bar */}
-        <div className="fixed bottom-0 w-full p-4 bg-gradient-to-t from-white via-white to-transparent z-30">
+        {/* Bottom Action Bar - larger touch target */}
+        <div className="fixed bottom-0 w-full p-3 sm:p-4 bg-gradient-to-t from-white via-white to-transparent z-30 safe-area-inset-bottom">
           <div className="max-w-md mx-auto">
             {!showQuestion && !winner && !showDiceOverlay && (
               <Button3D 
                 color={currentPlayer === 0 ? "blue" : "pink"} 
-                className="w-full !text-2xl !py-6 shadow-xl"
+                className="w-full !text-xl sm:!text-2xl !py-5 sm:!py-6 !min-h-[64px] shadow-xl"
                 onClick={handleRollDice}
                 disabled={isRolling}
               >
-                 ХВЪРЛИ ЗАРА!
+                🎲 ХВЪРЛИ ЗАРА!
               </Button3D>
             )}
 
             {winner && (
-              <Button3D color="green" className="w-full !text-2xl shadow-xl animate-bounce" onClick={resetGame}>
-                НОВА ИГРА
+              <Button3D color="green" className="w-full !text-xl sm:!text-2xl !py-5 sm:!py-6 !min-h-[64px] shadow-xl animate-bounce" onClick={resetGame}>
+                🔄 НОВА ИГРА
               </Button3D>
             )}
           </div>
@@ -1312,32 +3616,66 @@ export default function App() {
                  </div>
               </div>
               <div className="absolute mt-80 text-white font-black text-3xl drop-shadow-lg animate-pulse">
-                 {isRolling ? "Хвърляне..." : "Това е твоят ход!"}
+                 {isRolling ? "Хвърляне..." : `${players[currentPlayer]}, това е твоят ход!`}
               </div>
            </div>
         )}
 
+        {/* START ANNOUNCEMENT OVERLAY */}
+        {showStartAnnouncement && (
+           <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm">
+              <div className={`text-8xl mb-6 animate-bounce ${currentPlayer === 0 ? '' : ''}`}>
+                 {currentPlayer === 0 ? '👦' : '👧'}
+              </div>
+              <div className={`text-4xl sm:text-5xl font-black text-white drop-shadow-lg text-center px-4`}>
+                 Този път започва
+              </div>
+              <div className={`text-5xl sm:text-6xl font-black mt-4 drop-shadow-lg ${currentPlayer === 0 ? 'text-blue-400' : 'text-pink-400'}`}>
+                 {players[currentPlayer]}!
+              </div>
+              <div className="mt-8 text-white/80 text-xl animate-pulse">
+                 Приготви се... 🎲
+              </div>
+           </div>
+        )}
+
+        {/* MINI CELEBRATION OVERLAY - shows on correct answers */}
+        {currentCelebration && (
+          <CelebrationOverlay 
+            celebration={currentCelebration} 
+            playerIndex={currentPlayer}
+            onComplete={() => setCurrentCelebration(null)}
+          />
+        )}
+
+        {/* VICTORY CELEBRATION OVERLAY */}
+        {winner !== null && (
+          <div className="fixed inset-0 z-40 flex items-center justify-center bg-gradient-to-br from-yellow-300/90 to-orange-400/90 backdrop-blur-sm">
+            <VictoryCelebration winnerIndex={winner} winnerName={players[winner]} />
+          </div>
+        )}
+
         {/* Question Modal */}
         {showQuestion && currentQuestionData && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="bg-white w-full max-w-md rounded-[2.5rem] p-6 shadow-2xl border-4 border-slate-100 transform transition-all scale-100">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="bg-white w-full max-w-md rounded-[1.5rem] sm:rounded-[2.5rem] p-4 sm:p-6 shadow-2xl border-4 border-slate-100 transform transition-all scale-100">
               
               {/* Question Header */}
-              <div className="text-center mb-8">
+              <div className="text-center mb-4 sm:mb-8">
                 <div className="inline-block relative">
                    <div className="absolute inset-0 bg-yellow-200 rounded-full blur-lg opacity-50 animate-pulse"></div>
-                   <div className="relative text-[7rem] drop-shadow-md transform hover:scale-110 transition-transform duration-300 cursor-help" title={currentQuestionData.target.fr}>
+                   <div className="relative text-[5rem] sm:text-[7rem] drop-shadow-md transform hover:scale-110 transition-transform duration-300 cursor-help" title={currentQuestionData.target.fr}>
                      {currentQuestionData.target.emoji}
                    </div>
                 </div>
-                <h3 className="text-3xl font-black text-slate-800 mt-4 mb-2">Какво е това?</h3>
-                <span className="inline-block bg-slate-100 text-slate-600 font-bold px-4 py-1 rounded-full text-xs uppercase tracking-widest border border-slate-200">
+                <h3 className="text-2xl sm:text-3xl font-black text-slate-800 mt-2 sm:mt-4 mb-2">Какво е това?</h3>
+                <span className="inline-block bg-slate-100 text-slate-600 font-bold px-3 sm:px-4 py-1 rounded-full text-xs uppercase tracking-widest border border-slate-200">
                   {currentQuestionData.target.category}
                 </span>
               </div>
 
-              {/* Options */}
-              <div className="grid gap-4">
+              {/* Options - larger touch targets */}
+              <div className="grid gap-2 sm:gap-4">
                 {currentQuestionData.options.map((opt, idx) => {
                   // Determine button state color based on answer
                   let btnColor = "white";
@@ -1351,10 +3689,10 @@ export default function App() {
                       color={btnColor}
                       onClick={() => handleAnswer(opt)}
                       disabled={lastAnswerCorrect !== null}
-                      className="w-full justify-between group !text-slate-800 !border-slate-300"
+                      className="w-full justify-between group !text-slate-800 !border-slate-300 !py-4 sm:!py-5 !min-h-[56px]"
                     >
-                      <span className={btnColor === 'green' ? 'text-white' : 'text-slate-800'}>{opt.bg}</span>
-                      {lastAnswerCorrect === 'yes' && opt.bg === currentQuestionData.target.bg && <CheckCircle className="text-white" />}
+                      <span className={`text-base sm:text-lg ${btnColor === 'green' ? 'text-white' : 'text-slate-800'}`}>{opt.bg}</span>
+                      {lastAnswerCorrect === 'yes' && opt.bg === currentQuestionData.target.bg && <CheckCircle className="text-white w-5 h-5 sm:w-6 sm:h-6" />}
                       {lastAnswerCorrect === null && <span className="opacity-0 group-hover:opacity-100 text-slate-400">?</span>}
                     </Button3D>
                   );
@@ -1363,16 +3701,37 @@ export default function App() {
 
               {/* Feedback Message */}
               {lastAnswerCorrect === 'no' && (
-                <div className="mt-4 text-center text-red-500 font-black animate-shake text-xl">
+                <div className="mt-3 sm:mt-4 text-center text-red-500 font-black animate-shake text-lg sm:text-xl">
                    Опа! Грешка! 🙈
                 </div>
               )}
                {lastAnswerCorrect === 'yes' && (
-                <div className="mt-4 text-center text-green-500 font-black animate-bounce text-xl">
+                <div className="mt-3 sm:mt-4 text-center text-green-500 font-black animate-bounce text-lg sm:text-xl">
                    Супер! 🎉
                 </div>
               )}
 
+            </div>
+          </div>
+        )}
+
+        {/* Achievement Unlock Modal in Game Mode */}
+        {newAchievement && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+            <div className="bg-gradient-to-br from-yellow-400 to-orange-500 w-full max-w-sm rounded-[2rem] p-8 shadow-2xl text-center animate-bounce-slow">
+              <div className="text-6xl mb-4 animate-bounce">{newAchievement.emoji}</div>
+              <div className="text-white text-sm font-bold uppercase tracking-wider mb-2">
+                {newAchievement.playerName} отключи награда!
+              </div>
+              <div className="text-white text-2xl font-black mb-2">
+                {newAchievement.name}
+              </div>
+              <div className="text-white/80 text-sm mb-6">
+                {newAchievement.description}
+              </div>
+              <Button3D color="white" onClick={() => setNewAchievement(null)} className="mx-auto">
+                СУПЕР! 🎉
+              </Button3D>
             </div>
           </div>
         )}
