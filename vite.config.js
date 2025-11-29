@@ -10,9 +10,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['icons/*.svg', 'icons/*.png'],
       manifest: {
-        name: 'Българско Приключение - Игра за Саша и Лю',
+        name: 'Българско Приключение - Игра за Кайо и Ава',
         short_name: 'БГ Приключение',
-        description: 'Забавна игра за учене на български за Саша и Лю',
+        description: 'Забавна игра за учене на български за Кайо и Ава',
         start_url: './',
         display: 'standalone',
         background_color: '#7c3aed',

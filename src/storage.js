@@ -1,4 +1,4 @@
-// storage.js - localStorage utilities for Sasha & Lou's game progress
+// storage.js - localStorage utilities for Kayo & Ava's game progress
 
 const STORAGE_KEY = 'bulgarianAdventure';
 
@@ -35,9 +35,9 @@ export const getGameData = () => {
 
 // Create default game data structure
 const createDefaultGameData = () => ({
-  sasha: createDefaultPlayerData(),
-  lou: createDefaultPlayerData(),
-  lastStarter: 'Саша',
+  Kayo: createDefaultPlayerData(),
+  Ava: createDefaultPlayerData(),
+  lastStarter: 'Кайо',
   totalGamesPlayed: 0
 });
 
@@ -53,14 +53,14 @@ export const saveGameData = (data) => {
 // Get player data by name
 export const getPlayerData = (playerName) => {
   const data = getGameData();
-  const key = playerName === 'Саша' ? 'sasha' : 'lou';
+  const key = playerName === 'Кайо' ? 'Kayo' : 'Ava';
   return data[key] || createDefaultPlayerData();
 };
 
 // Update player data
 export const updatePlayerData = (playerName, updates) => {
   const data = getGameData();
-  const key = playerName === 'Саша' ? 'sasha' : 'lou';
+  const key = playerName === 'Кайо' ? 'Kayo' : 'Ava';
   data[key] = { ...data[key], ...updates };
   saveGameData(data);
   return data[key];
@@ -69,7 +69,7 @@ export const updatePlayerData = (playerName, updates) => {
 // Record a correct answer
 export const recordCorrectAnswer = (playerName, word, category) => {
   const data = getGameData();
-  const key = playerName === 'Саша' ? 'sasha' : 'lou';
+  const key = playerName === 'Кайо' ? 'Kayo' : 'Ava';
   const player = data[key];
   
   // Update total correct
@@ -101,7 +101,7 @@ export const recordCorrectAnswer = (playerName, word, category) => {
 // Record a wrong answer
 export const recordWrongAnswer = (playerName, word, category) => {
   const data = getGameData();
-  const key = playerName === 'Саша' ? 'sasha' : 'lou';
+  const key = playerName === 'Кайо' ? 'Kayo' : 'Ava';
   const player = data[key];
   
   // Update total wrong
@@ -126,7 +126,7 @@ export const recordWrongAnswer = (playerName, word, category) => {
 // Record game completion
 export const recordGameEnd = (playerName, won, hadPerfectGame = false) => {
   const data = getGameData();
-  const key = playerName === 'Саша' ? 'sasha' : 'lou';
+  const key = playerName === 'Кайо' ? 'Kayo' : 'Ava';
   const player = data[key];
   
   player.gamesPlayed = (player.gamesPlayed || 0) + 1;
@@ -149,7 +149,7 @@ export const recordGameEnd = (playerName, won, hadPerfectGame = false) => {
 // Record flashcard viewed
 export const recordFlashcardSeen = (playerName) => {
   const data = getGameData();
-  const key = playerName === 'Саша' ? 'sasha' : 'lou';
+  const key = playerName === 'Кайо' ? 'Kayo' : 'Ava';
   data[key].flashcardsSeen = (data[key].flashcardsSeen || 0) + 1;
   saveGameData(data);
 };
@@ -170,15 +170,15 @@ export const getMasteredWords = (playerName) => {
 export const getHeadToHead = () => {
   const data = getGameData();
   return {
-    sashaWins: data.sasha?.gamesWon || 0,
-    louWins: data.lou?.gamesWon || 0
+    kayoWins: data.Kayo?.gamesWon || 0,
+    avaWins: data.Ava?.gamesWon || 0
   };
 };
 
 // Unlock achievement for player
 export const unlockAchievement = (playerName, achievementId) => {
   const data = getGameData();
-  const key = playerName === 'Саша' ? 'sasha' : 'lou';
+  const key = playerName === 'Кайо' ? 'Kayo' : 'Ava';
   
   if (!data[key].achievements) {
     data[key].achievements = [];
@@ -213,7 +213,7 @@ export const resetAllProgress = () => {
 // Reset progress for specific player
 export const resetPlayerProgress = (playerName) => {
   const data = getGameData();
-  const key = playerName === 'Саша' ? 'sasha' : 'lou';
+  const key = playerName === 'Кайо' ? 'Kayo' : 'Ava';
   data[key] = createDefaultPlayerData();
   saveGameData(data);
 };

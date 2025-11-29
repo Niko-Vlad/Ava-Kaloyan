@@ -1,7 +1,7 @@
 {
   "name": "bulgarian-adventure",
   "version": "1.0.0",
-  "description": "Българско Приключение - Bulgarian vocabulary game for Sasha & Lou",
+  "description": "Българско Приключение - Bulgarian vocabulary game for Kayo & Ava",
   "type": "module",
   "scripts": {
     "dev": "vite",

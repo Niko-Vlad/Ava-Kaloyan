@@ -1,4 +1,4 @@
-// achievements.js - Achievement system for Sasha & Lou's game
+// achievements.js - Achievement system for Kayo & Ava's game
 
 import { getPlayerStats, getPlayerData, unlockAchievement, hasAchievement } from './storage.js';
 
@@ -151,7 +151,7 @@ export const getAchievementsWithStatus = (playerName) => {
     unlocked: playerAchievements.includes(achievement.id),
     // For royalty achievement, personalize the name
     displayName: achievement.id === 'royalty' 
-      ? (playerName === 'Саша' ? 'Крал' : 'Кралица')
+      ? (playerName === 'Кайо' ? 'Крал' : 'Кралица')
       : achievement.name
   }));
 };

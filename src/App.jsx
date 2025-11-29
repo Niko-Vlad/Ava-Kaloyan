@@ -1,4 +1,4 @@
-// App.jsx - Bulgarian Adventure Game for Sasha & Lou
+// App.jsx - Bulgarian Adventure Game for Kayo & Ava
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Play, BookOpen, RotateCcw, Trophy, ArrowRight, Home, Star, LayoutGrid, CheckCircle, XCircle, Sparkles, Smile, Frown, Award, BarChart3, X, Settings } from 'lucide-react';
@@ -841,8 +841,8 @@ const rawVocab = [
 const vocabulary = rawVocab.map(([emoji, bg, category]) => ({ emoji, bg, category }));
 
 // --- CELEBRATION DATA ---
-// Lou's celebrations: princesses, cutesy, sparkly things
-const LOU_CELEBRATIONS = [
+// Ava's celebrations: princesses, cutesy, sparkly things
+const ava_CELEBRATIONS = [
   { emoji: "👑", text: "Принцеса!", color: "pink" },
   { emoji: "🦄", text: "Магично!", color: "purple" },
   { emoji: "🦋", text: "Прекрасно!", color: "pink" },
@@ -857,8 +857,8 @@ const LOU_CELEBRATIONS = [
   { emoji: "💝", text: "Супер!", color: "pink" },
 ];
 
-// Sasha's celebrations: Pokemon, superheroes, action
-const SASHA_CELEBRATIONS = [
+// Kayo's celebrations: Pokemon, superheroes, action
+const KAYO_CELEBRATIONS = [
   { emoji: "⚡", text: "Прекрасно!", color: "yellow" },
   { emoji: "🔥", text: "Огнен!", color: "orange" },
   { emoji: "💪", text: "Силен!", color: "blue" },
@@ -963,7 +963,7 @@ const THEMES = {
 
 // Helper to get theme for player
 const getPlayerTheme = (playerName) => {
-  const key = playerName === 'Кайо' ? 'theme_sasha' : 'theme_lou';
+  const key = playerName === 'Кайо' ? 'theme_kayo' : 'theme_ava';
   const savedTheme = localStorage.getItem(key);
   if (savedTheme && THEMES[savedTheme]) {
     return THEMES[savedTheme];
@@ -973,7 +973,7 @@ const getPlayerTheme = (playerName) => {
 };
 
 const setPlayerTheme = (playerName, themeId) => {
-  const key = playerName === 'Кайо' ? 'theme_sasha' : 'theme_lou';
+  const key = playerName === 'Кайо' ? 'theme_kayo' : 'theme_ava';
   localStorage.setItem(key, themeId);
 };
 
@@ -1510,8 +1510,8 @@ const CelebrationOverlay = ({ celebration, playerIndex, onComplete }) => {
   
   // Different particle emojis based on player
   const particles = playerIndex === 1 
-    ? ["✨", "💖", "🦋", "🌸", "💫", "🎀"] // Lou: sparkly, cute
-    : ["⚡", "💥", "🔥", "⭐", "💪", "🚀"]; // Sasha: action, energy
+    ? ["✨", "💖", "🦋", "🌸", "💫", "🎀"] // Ava: sparkly, cute
+    : ["⚡", "💥", "🔥", "⭐", "💪", "🚀"]; // Kayo: action, energy
 
   return (
     <>
@@ -1577,10 +1577,10 @@ const CelebrationOverlay = ({ celebration, playerIndex, onComplete }) => {
 
 // Victory Celebration - big winner screen
 const VictoryCelebration = ({ winnerIndex, winnerName }) => {
-  const isLou = winnerIndex === 1;
+  const isAva = winnerIndex === 1;
   
   // Different victory themes
-  const theme = isLou ? {
+  const theme = isAva ? {
     bg: "from-pink-400 via-purple-400 to-pink-500",
     particles: ["👑", "🦄", "✨", "💖", "🌸", "🦋", "🎀", "💫"],
     title: "Принцесата печели!",
@@ -1636,7 +1636,7 @@ const VictoryCelebration = ({ winnerIndex, winnerName }) => {
       {/* Winner badge */}
       <div className={`victory-glow bg-gradient-to-br ${theme.bg} p-8 rounded-[3rem] border-4 border-white/50`}>
         <div className="text-center victory-bounce">
-          <div className="text-8xl mb-4">{isLou ? "👸" : "🦸"}</div>
+          <div className="text-8xl mb-4">{isAva ? "👸" : "🦸"}</div>
           <div className="text-4xl font-black text-white drop-shadow-lg mb-2">
             {theme.title}
           </div>
@@ -2302,13 +2302,13 @@ const ParentDashboard = ({ onClose }) => {
   const [selectedPlayer, setSelectedPlayer] = useState('Кайо');
   const [showResetConfirm, setShowResetConfirm] = useState(null); // 'Кайо', 'Ава', or 'all'
   
-  const sashaStats = getPlayerStats('Кайо');
-  const louStats = getPlayerStats('Ава');
-  const sashaCategoryPerf = getCategoryPerformance('Кайо');
-  const louCategoryPerf = getCategoryPerformance('Ава');
+  const kayoStats = getPlayerStats('Кайо');
+  const avaStats = getPlayerStats('Ава');
+  const kayoCategoryPerf = getCategoryPerformance('Кайо');
+  const avaCategoryPerf = getCategoryPerformance('Ава');
   
-  const stats = selectedPlayer === 'Кайо' ? sashaStats : louStats;
-  const categoryPerf = selectedPlayer === 'Кайо' ? sashaCategoryPerf : louCategoryPerf;
+  const stats = selectedPlayer === 'Кайо' ? kayoStats : avaStats;
+  const categoryPerf = selectedPlayer === 'Кайо' ? kayoCategoryPerf : avaCategoryPerf;
 
   // Get words that need more practice (answered wrong more than correct)
   const getWeakWords = (playerName) => {
@@ -2571,13 +2571,13 @@ const ParentDashboard = ({ onClose }) => {
           <div className="flex items-center justify-around">
             <div className="text-center">
               <div className="text-4xl mb-1">👦</div>
-              <div className="text-3xl font-black text-blue-600">{sashaStats.gamesWon}</div>
+              <div className="text-3xl font-black text-blue-600">{kayoStats.gamesWon}</div>
               <div className="text-sm text-slate-500">победи</div>
             </div>
             <div className="text-2xl font-black text-slate-300">VS</div>
             <div className="text-center">
               <div className="text-4xl mb-1">👧</div>
-              <div className="text-3xl font-black text-pink-500">{louStats.gamesWon}</div>
+              <div className="text-3xl font-black text-pink-500">{avaStats.gamesWon}</div>
               <div className="text-sm text-slate-500">победи</div>
             </div>
           </div>
@@ -2656,7 +2656,7 @@ export default function App() {
   // Fair start system - alternate who starts each game
   const getStarterIndex = () => {
     const lastStarter = localStorage.getItem('lastStarter');
-    return lastStarter === 'Кайо' ? 1 : 0; // If Sasha started last, Lou starts now
+    return lastStarter === 'Кайо' ? 1 : 0; // If Kayo started last, Ava starts now
   };
   
   const [currentPlayer, setCurrentPlayer] = useState(getStarterIndex);
@@ -2871,7 +2871,7 @@ export default function App() {
       recordCorrectAnswer(playerName, word, category);
       
       // Phase 3: Trigger mini celebration!
-      const celebrations = currentPlayer === 0 ? SASHA_CELEBRATIONS : LOU_CELEBRATIONS;
+      const celebrations = currentPlayer === 0 ? KAYO_CELEBRATIONS : AVA_CELEBRATIONS;
       const randomCelebration = celebrations[Math.floor(Math.random() * celebrations.length)];
       setCurrentCelebration(randomCelebration);
       
@@ -2956,12 +2956,12 @@ export default function App() {
           <div className="flex items-center gap-4">
             <div className="text-center">
               <div className="text-2xl">👦</div>
-              <div className="font-black text-blue-600">{h2h.sashaWins}</div>
+              <div className="font-black text-blue-600">{h2h.kayoWins}</div>
             </div>
             <div className={`font-bold ${currentTheme.isDark ? 'text-white/60' : 'text-slate-400'}`}>VS</div>
             <div className="text-center">
               <div className="text-2xl">👧</div>
-              <div className="font-black text-pink-500">{h2h.louWins}</div>
+              <div className="font-black text-pink-500">{h2h.avaWins}</div>
             </div>
           </div>
         </div>
@@ -3279,7 +3279,7 @@ export default function App() {
 
   // MATCHING GAME VIEW
   if (view === 'matching' && matchingPlayer) {
-    const celebrations = matchingPlayer === 'Кайо' ? SASHA_CELEBRATIONS : LOU_CELEBRATIONS;
+    const celebrations = matchingPlayer === 'Кайо' ? KAYO_CELEBRATIONS : AVA_CELEBRATIONS;
     return (
       <MatchingGame 
         playerName={matchingPlayer}
@@ -3298,7 +3298,7 @@ export default function App() {
 
   // SENTENCE BUILDER VIEW
   if (view === 'sentence' && sentencePlayer) {
-    const celebrations = sentencePlayer === 'Кайо' ? SASHA_CELEBRATIONS : LOU_CELEBRATIONS;
+    const celebrations = sentencePlayer === 'Кайо' ? KAYO_CELEBRATIONS : AVA_CELEBRATIONS;
     return (
       <SentenceBuilder 
         playerName={sentencePlayer}
