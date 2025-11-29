@@ -963,17 +963,17 @@ const THEMES = {
 
 // Helper to get theme for player
 const getPlayerTheme = (playerName) => {
-  const key = playerName === 'Саша' ? 'theme_sasha' : 'theme_lou';
+  const key = playerName === 'Кайо' ? 'theme_sasha' : 'theme_lou';
   const savedTheme = localStorage.getItem(key);
   if (savedTheme && THEMES[savedTheme]) {
     return THEMES[savedTheme];
   }
   // Default themes
-  return playerName === 'Лю' ? THEMES.princess : THEMES.superhero;
+  return playerName === 'Ава' ? THEMES.princess : THEMES.superhero;
 };
 
 const setPlayerTheme = (playerName, themeId) => {
-  const key = playerName === 'Саша' ? 'theme_sasha' : 'theme_lou';
+  const key = playerName === 'Кайо' ? 'theme_sasha' : 'theme_lou';
   localStorage.setItem(key, themeId);
 };
 
@@ -1790,8 +1790,8 @@ const MatchingGame = ({ playerName, onComplete, onExit, celebrations }) => {
 
         {/* Player indicator */}
         <div className="text-center mb-4">
-          <span className={`inline-block px-4 py-2 rounded-full font-black text-white ${playerName === 'Саша' ? 'bg-blue-500' : 'bg-pink-500'}`}>
-            {playerName === 'Саша' ? '👦' : '👧'} {playerName} играе
+          <span className={`inline-block px-4 py-2 rounded-full font-black text-white ${playerName === 'Кайо' ? 'bg-blue-500' : 'bg-pink-500'}`}>
+            {playerName === 'Кайо' ? '👦' : '👧'} {playerName} играе
           </span>
         </div>
 
@@ -1989,8 +1989,8 @@ const SentenceBuilder = ({ playerName, onComplete, onExit, celebrations }) => {
 
         {/* Player indicator */}
         <div className="text-center mb-6">
-          <span className={`inline-block px-4 py-2 rounded-full font-black text-white ${playerName === 'Саша' ? 'bg-blue-600' : 'bg-pink-500'}`}>
-            {playerName === 'Саша' ? '👦' : '👧'} {playerName} играе
+          <span className={`inline-block px-4 py-2 rounded-full font-black text-white ${playerName === 'Кайо' ? 'bg-blue-600' : 'bg-pink-500'}`}>
+            {playerName === 'Кайо' ? '👦' : '👧'} {playerName} играе
           </span>
         </div>
 
@@ -2299,16 +2299,16 @@ const PinEntry = ({ onSuccess, onCancel }) => {
 
 // Parent Dashboard Component
 const ParentDashboard = ({ onClose }) => {
-  const [selectedPlayer, setSelectedPlayer] = useState('Саша');
-  const [showResetConfirm, setShowResetConfirm] = useState(null); // 'Саша', 'Лю', or 'all'
+  const [selectedPlayer, setSelectedPlayer] = useState('Кайо');
+  const [showResetConfirm, setShowResetConfirm] = useState(null); // 'Кайо', 'Ава', or 'all'
   
-  const sashaStats = getPlayerStats('Саша');
-  const louStats = getPlayerStats('Лю');
-  const sashaCategoryPerf = getCategoryPerformance('Саша');
-  const louCategoryPerf = getCategoryPerformance('Лю');
+  const sashaStats = getPlayerStats('Кайо');
+  const louStats = getPlayerStats('Ава');
+  const sashaCategoryPerf = getCategoryPerformance('Кайо');
+  const louCategoryPerf = getCategoryPerformance('Ава');
   
-  const stats = selectedPlayer === 'Саша' ? sashaStats : louStats;
-  const categoryPerf = selectedPlayer === 'Саша' ? sashaCategoryPerf : louCategoryPerf;
+  const stats = selectedPlayer === 'Кайо' ? sashaStats : louStats;
+  const categoryPerf = selectedPlayer === 'Кайо' ? sashaCategoryPerf : louCategoryPerf;
 
   // Get words that need more practice (answered wrong more than correct)
   const getWeakWords = (playerName) => {
@@ -2368,24 +2368,24 @@ const ParentDashboard = ({ onClose }) => {
         <div className="bg-white rounded-2xl p-4 shadow-md">
           <div className="flex gap-2">
             <button
-              onClick={() => setSelectedPlayer('Саша')}
+              onClick={() => setSelectedPlayer('Кайо')}
               className={`flex-1 py-3 px-4 rounded-xl font-black transition-all flex items-center justify-center gap-2 ${
-                selectedPlayer === 'Саша'
+                selectedPlayer === 'Кайо'
                   ? 'bg-blue-600 text-white shadow-lg'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
-              👦 Саша
+              👦 Кайо
             </button>
             <button
-              onClick={() => setSelectedPlayer('Лю')}
+              onClick={() => setSelectedPlayer('Ава')}
               className={`flex-1 py-3 px-4 rounded-xl font-black transition-all flex items-center justify-center gap-2 ${
-                selectedPlayer === 'Лю'
+                selectedPlayer === 'Ава'
                   ? 'bg-pink-500 text-white shadow-lg'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
-              👧 Лю
+              👧 Ава
             </button>
           </div>
         </div>
@@ -2567,7 +2567,7 @@ const ParentDashboard = ({ onClose }) => {
 
         {/* Head to Head */}
         <div className="bg-white rounded-2xl p-4 shadow-md">
-          <h3 className="font-black text-slate-800 mb-3">⚔️ Саша vs Лю</h3>
+          <h3 className="font-black text-slate-800 mb-3">⚔️ Кайо vs Ава</h3>
           <div className="flex items-center justify-around">
             <div className="text-center">
               <div className="text-4xl mb-1">👦</div>
@@ -2649,14 +2649,14 @@ const ParentDashboard = ({ onClose }) => {
 // Main App Component
 export default function App() {
   const [view, setView] = useState('menu');
-  const [players] = useState(['Саша', 'Лю']);
+  const [players] = useState(['Кайо', 'Ава']);
   const [positions, setPositions] = useState([0, 0]);
   const [scores, setScores] = useState([0, 0]);
   
   // Fair start system - alternate who starts each game
   const getStarterIndex = () => {
     const lastStarter = localStorage.getItem('lastStarter');
-    return lastStarter === 'Саша' ? 1 : 0; // If Sasha started last, Lou starts now
+    return lastStarter === 'Кайо' ? 1 : 0; // If Sasha started last, Lou starts now
   };
   
   const [currentPlayer, setCurrentPlayer] = useState(getStarterIndex);
@@ -2676,7 +2676,7 @@ export default function App() {
   const [newAchievement, setNewAchievement] = useState(null); // For achievement unlock modal
   const [showStats, setShowStats] = useState(false); // Stats view
   const [showAchievements, setShowAchievements] = useState(false); // Achievements gallery
-  const [selectedStatsPlayer, setSelectedStatsPlayer] = useState('Саша');
+  const [selectedStatsPlayer, setSelectedStatsPlayer] = useState('Кайо');
 
   // Phase 3: Mini celebrations on correct answers
   const [currentCelebration, setCurrentCelebration] = useState(null);
@@ -2704,7 +2704,7 @@ export default function App() {
   const [showParentDashboard, setShowParentDashboard] = useState(false);
 
   // Learn mode state
-  const [learnPlayer, setLearnPlayer] = useState('Саша');
+  const [learnPlayer, setLearnPlayer] = useState('Кайо');
 
   // Get current theme - shared for both players
   const currentTheme = appTheme;
@@ -2715,8 +2715,8 @@ export default function App() {
   const resetGame = () => {
     // Alternate starting player for fairness
     const lastStarter = localStorage.getItem('lastStarter');
-    const newStarterIndex = lastStarter === 'Саша' ? 1 : 0;
-    const newStarterName = newStarterIndex === 0 ? 'Саша' : 'Лю';
+    const newStarterIndex = lastStarter === 'Кайо' ? 1 : 0;
+    const newStarterName = newStarterIndex === 0 ? 'Кайо' : 'Ава';
     
     // Save who starts this game
     localStorage.setItem('lastStarter', newStarterName);
@@ -3013,7 +3013,7 @@ export default function App() {
         </div>
         
         <div className={`mt-10 px-6 py-3 rounded-2xl border-2 text-center shadow-lg ${currentTheme.isDark ? 'bg-white/10 border-white/20' : 'bg-white border-slate-200'}`}>
-          <p className={`font-bold ${currentTheme.isDark ? 'text-white/80' : 'text-slate-600'}`}>Специално за <span className="text-blue-400 font-black">Саша</span> 👦 и <span className="text-pink-400 font-black">Лю</span> 👧 ❤️</p>
+          <p className={`font-bold ${currentTheme.isDark ? 'text-white/80' : 'text-slate-600'}`}>Специално за <span className="text-blue-400 font-black">Кайо</span> 👦 и <span className="text-pink-400 font-black">Ава</span> 👧 ❤️</p>
         </div>
 
         {/* Parent Dashboard Button - subtle at bottom */}
@@ -3066,16 +3066,16 @@ export default function App() {
               {/* Player selector */}
               <div className="flex gap-2 mb-6">
                 <button 
-                  onClick={() => setSelectedStatsPlayer('Саша')}
-                  className={`flex-1 py-3 rounded-xl font-black transition-all ${selectedStatsPlayer === 'Саша' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600'}`}
+                  onClick={() => setSelectedStatsPlayer('Кайо')}
+                  className={`flex-1 py-3 rounded-xl font-black transition-all ${selectedStatsPlayer === 'Кайо' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600'}`}
                 >
-                  👦 Саша
+                  👦 Кайо
                 </button>
                 <button 
-                  onClick={() => setSelectedStatsPlayer('Лю')}
-                  className={`flex-1 py-3 rounded-xl font-black transition-all ${selectedStatsPlayer === 'Лю' ? 'bg-pink-500 text-white' : 'bg-slate-100 text-slate-600'}`}
+                  onClick={() => setSelectedStatsPlayer('Ава')}
+                  className={`flex-1 py-3 rounded-xl font-black transition-all ${selectedStatsPlayer === 'Ава' ? 'bg-pink-500 text-white' : 'bg-slate-100 text-slate-600'}`}
                 >
-                  👧 Лю
+                  👧 Ава
                 </button>
               </div>
 
@@ -3147,16 +3147,16 @@ export default function App() {
               {/* Player selector */}
               <div className="flex gap-2 mb-6">
                 <button 
-                  onClick={() => setSelectedStatsPlayer('Саша')}
-                  className={`flex-1 py-3 rounded-xl font-black transition-all ${selectedStatsPlayer === 'Саша' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600'}`}
+                  onClick={() => setSelectedStatsPlayer('Кайо')}
+                  className={`flex-1 py-3 rounded-xl font-black transition-all ${selectedStatsPlayer === 'Кайо' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600'}`}
                 >
-                  👦 Саша
+                  👦 Кайо
                 </button>
                 <button 
-                  onClick={() => setSelectedStatsPlayer('Лю')}
-                  className={`flex-1 py-3 rounded-xl font-black transition-all ${selectedStatsPlayer === 'Лю' ? 'bg-pink-500 text-white' : 'bg-slate-100 text-slate-600'}`}
+                  onClick={() => setSelectedStatsPlayer('Ава')}
+                  className={`flex-1 py-3 rounded-xl font-black transition-all ${selectedStatsPlayer === 'Ава' ? 'bg-pink-500 text-white' : 'bg-slate-100 text-slate-600'}`}
                 >
-                  👧 Лю
+                  👧 Ава
                 </button>
               </div>
 
@@ -3236,10 +3236,10 @@ export default function App() {
                 <button 
                   onClick={() => {
                     if (showPlayerSelect === 'matching') {
-                      setMatchingPlayer('Саша');
+                      setMatchingPlayer('Кайо');
                       setView('matching');
                     } else {
-                      setSentencePlayer('Саша');
+                      setSentencePlayer('Кайо');
                       setView('sentence');
                     }
                     setShowPlayerSelect(null);
@@ -3247,15 +3247,15 @@ export default function App() {
                   className="flex-1 p-6 rounded-2xl bg-blue-100 border-4 border-blue-300 hover:border-blue-500 hover:bg-blue-200 transition-all"
                 >
                   <div className="text-5xl mb-2">👦</div>
-                  <div className="font-black text-blue-700 text-xl">Саша</div>
+                  <div className="font-black text-blue-700 text-xl">Кайо</div>
                 </button>
                 <button 
                   onClick={() => {
                     if (showPlayerSelect === 'matching') {
-                      setMatchingPlayer('Лю');
+                      setMatchingPlayer('Ава');
                       setView('matching');
                     } else {
-                      setSentencePlayer('Лю');
+                      setSentencePlayer('Ава');
                       setView('sentence');
                     }
                     setShowPlayerSelect(null);
@@ -3263,7 +3263,7 @@ export default function App() {
                   className="flex-1 p-6 rounded-2xl bg-pink-100 border-4 border-pink-300 hover:border-pink-500 hover:bg-pink-200 transition-all"
                 >
                   <div className="text-5xl mb-2">👧</div>
-                  <div className="font-black text-pink-600 text-xl">Лю</div>
+                  <div className="font-black text-pink-600 text-xl">Ава</div>
                 </button>
               </div>
               
@@ -3279,7 +3279,7 @@ export default function App() {
 
   // MATCHING GAME VIEW
   if (view === 'matching' && matchingPlayer) {
-    const celebrations = matchingPlayer === 'Саша' ? SASHA_CELEBRATIONS : LOU_CELEBRATIONS;
+    const celebrations = matchingPlayer === 'Кайо' ? SASHA_CELEBRATIONS : LOU_CELEBRATIONS;
     return (
       <MatchingGame 
         playerName={matchingPlayer}
@@ -3298,7 +3298,7 @@ export default function App() {
 
   // SENTENCE BUILDER VIEW
   if (view === 'sentence' && sentencePlayer) {
-    const celebrations = sentencePlayer === 'Саша' ? SASHA_CELEBRATIONS : LOU_CELEBRATIONS;
+    const celebrations = sentencePlayer === 'Кайо' ? SASHA_CELEBRATIONS : LOU_CELEBRATIONS;
     return (
       <SentenceBuilder 
         playerName={sentencePlayer}
@@ -3349,12 +3349,12 @@ export default function App() {
           </div>
           {/* Player selector for learn mode */}
           <button 
-            onClick={() => setLearnPlayer(p => p === 'Саша' ? 'Лю' : 'Саша')}
+            onClick={() => setLearnPlayer(p => p === 'Кайо' ? 'Ава' : 'Кайо')}
             className={`px-3 py-2 rounded-xl font-bold text-sm transition-all ${
-              learnPlayer === 'Саша' ? 'bg-blue-100 text-blue-600' : 'bg-pink-100 text-pink-600'
+              learnPlayer === 'Кайо' ? 'bg-blue-100 text-blue-600' : 'bg-pink-100 text-pink-600'
             }`}
           >
-            {learnPlayer === 'Саша' ? '👦' : '👧'}
+            {learnPlayer === 'Кайо' ? '👦' : '👧'}
           </button>
         </div>
 
@@ -3439,12 +3439,12 @@ export default function App() {
             <div className={`flex rounded-2xl p-1 shadow-md border gap-1 ${currentTheme.isDark ? 'bg-white/10 border-white/20' : 'bg-white border-slate-200'}`}>
               <div className={`px-3 py-2 rounded-xl flex items-center gap-2 transition-all ${currentPlayer === 0 ? 'bg-blue-600 text-white shadow-md' : currentTheme.isDark ? 'text-white/50' : 'text-slate-400'}`}>
                 <span className="text-base">👦</span>
-                <span className="font-black text-sm hidden sm:inline">Саша</span>
+                <span className="font-black text-sm hidden sm:inline">Кайо</span>
                 <span className="font-black text-lg">{scores[0]}</span>
               </div>
               <div className={`px-3 py-2 rounded-xl flex items-center gap-2 transition-all ${currentPlayer === 1 ? 'bg-pink-500 text-white shadow-md' : currentTheme.isDark ? 'text-white/50' : 'text-slate-400'}`}>
                 <span className="text-base">👧</span>
-                <span className="font-black text-sm hidden sm:inline">Лю</span>
+                <span className="font-black text-sm hidden sm:inline">Ава</span>
                 <span className="font-black text-lg">{scores[1]}</span>
               </div>
             </div>
