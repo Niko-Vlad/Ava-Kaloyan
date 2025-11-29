@@ -2181,7 +2181,7 @@ const ThemePicker = ({ currentTheme, onSelect, onClose }) => {
 // --- PARENT DASHBOARD COMPONENTS ---
 
 // PIN Entry Component
-const PARENT_PIN = '0709'; // Default PIN - parents can remember this
+const PARENT_PIN = '1402'; // Default PIN - parents can remember this
 
 const PinEntry = ({ onSuccess, onCancel }) => {
   const [pin, setPin] = useState('');
